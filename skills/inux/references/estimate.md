@@ -69,38 +69,3 @@ Total Complexity Score equals the six scores. Final Estimate is numeric and
 ends in SP, supported by the work and any evidenced team convention. Do not
 invent a score-to-points formula. Overall Reason explains the dominant effort
 and risk. No blank fields, template placeholders, or unsupported claims remain.
-
-## Testing mode
-
-Follow the shared testing rules in SKILL.md. Run the normal selected action on
-disposable inputs, plus its checks below. A bare test runs generate, improve,
-and explain; publishing remains skipped.
-
-### Generate test
-
-Initialize both templates in a disposable task and use a copied or labelled
-fixture ticket. Generate an estimate and verify [Validation](#validation).
-Check ticket.md, initialized pr.md, and unrelated files stay byte-for-byte unchanged.
-Test a mismatched supplied ID blocks saving; an uninitialized fixture requests a
-task without automatic creation.
-
-Using [cli.md](cli.md), compare parsed ADF file/stdout conversions of the completed
-estimate. Check rows, reasons, and SP survive using combined adjacent text nodes,
-and Markdown stays intact. A missing input fails without successful output.
-
-### Improve test
-
-Use a completed disposable estimate with accurate judgments and one vague reason.
-Refine that reason, preserving supported scores/SP and unrelated content. Verify
-[Validation](#validation); explain any justified SP change. Other
-task files stay byte-for-byte unchanged. Reuse a generated fixture when available.
-
-### Explain test
-
-Explain a completed disposable estimate. Compare the answer with its saved
-scores/reasons and verify every task file remains byte-for-byte unchanged.
-
-### Publish test
-
-Report SKIPPED: estimate publishing is excluded. Do not post a comment or
-call publishing tools. Use the generate action's test for local ADF conversion.

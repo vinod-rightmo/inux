@@ -1,185 +1,99 @@
-# Inux MVP
+# Inux
 
-A small Go CLI plus an agent skill. The skill exposes these commands:
+Start Jira tasks, draft estimates, and prepare pull requests from your coding agent.
 
-```text
-/inux help
-/inux setup
-/inux task <id>
-/inux estimate <request>
-/inux pr <request>
-/inux test task [id]
-/inux test estimate [request]
-/inux test pr [request]
-```
+**Codex & Cursor · macOS, Linux & Windows**
 
-Requests are plain language: generate or improve an estimate, publish it, prepare
-a PR, refine its title/technical summary, or publish the reviewed draft.
+## Get started
 
-The agent fetches the exact Jira ticket first for `/inux task <id>`. Once retrieval
-succeeds and both asset templates are readable, it replaces `.inux/`, copies
-estimate.md and pr.md templates, and writes ticket.md.
-Failed retrieval leaves the previous task intact. This command authorizes replacing
-all old task files, including custom files; it does not create a branch or publish.
+You need Node.js, Git, and access to this private GitHub repository.
 
-The CLI also has four commands, each with one handler file:
-
-```text
-ix task TEMPLATE [PROJECT]
-ix adf INPUT.md [OUTPUT.json]
-ix check-branch PATTERN NAME [NAME...]
-ix check-commit PATTERN MESSAGE [MESSAGE...]
-```
-
-The skill passes its absolute `skills/inux/assets/estimate.md` path as TEMPLATE.
-PROJECT defaults to the current directory. For Git, pass the ordinary checkout
-root. ix validates the template and checkout before deleting PROJECT/.inux,
-recreates it with estimate.md, and locally excludes it using .git/info/exclude.
-The project's .gitignore and other files remain unchanged. Linked worktrees and
-ancestor discovery are outside this MVP; plain directories also work.
-
-The full `/inux task <id>` workflow validates both templates before replacement.
-After ix task succeeds, the agent copies assets/pr.md into `.inux/pr.md` and
-saves ticket.md. All three task files exist before estimate/PR writing starts. ix never fetches Jira, invokes another CLI, or publishes.
-The old init/reset/remove CLI commands and standalone skill commands are removed.
-
-ADF conversion uses pinned `github.com/ericmason/mdadf v0.1.3` from the earlier
-Inux Go CLI. It supports headings, paragraphs, common inline formatting, lists,
-code blocks and GFM tables. Images become links; raw HTML remains text. It is not
-a lossless Markdown round-trip converter. Review generated output before publishing.
-
-Operations report JSON; errors go to stderr with exit code 1. ADF without an output
-filename prints the actual ADF document. Conversion preserves its Markdown input,
-including hard-link/symlink aliases. Files are replaced through temporary files.
-
-## Help and testing
-
-Skill version and author are stored in SKILL.md frontmatter under `metadata`.
-`/inux help` displays these values above the command list.
-
-`/inux help` uses [help.md](skills/inux/references/help.md) and needs no active
-project or ticket. There is one reference per main command: help.md, setup.md,
-task.md, [estimate.md](skills/inux/references/estimate.md), and
-[pr.md](skills/inux/references/pr.md). Estimate/PR actions, validation, and testing
-are sections in those files. Follow only the requested action's section;
-readiness runs only for PR preparation/publication. Shared test rules live in
-[SKILL.md](skills/inux/SKILL.md), and [be-human.md](skills/inux/references/be-human.md)
-remains the writing guide. Add `test` after `/inux` to test an action, such as
-`/inux test estimate improve` or `/inux test pr title`. Bare estimate/PR tests
-run their non-publishing actions. Refinements reuse verified evidence and inspect more
-code only when needed. This reduces unnecessary work; it does not set the host's
-reasoning effort or guarantee a runtime. Run `/inux test task`, `/inux test estimate`,
-or `/inux test pr`; add a real ticket ID to the task test for live Jira reads.
-Tests write only to disposable projects and retain a pass/fail/blocked/skipped
-report. They exclude publishing, tool installation, and login. PR tests use
-a local Git fixture to exercise readiness without changing your source branch.
-Update installed skill copies and start a new conversation to load changes.
-
-## Pull-request workflow
-
-`/inux pr prepare` checks the current branch convention, every commit introduced
-relative to the convention baseline (remote main by default), and a clean Git
-index/working tree, including untracked files and submodules. The PR target is
-separate (dev by default). The established team branch/commit rules apply unless
-explicit user/repository rules override them; no custom regex input is needed
-for the defaults. Missing refs or failed checks block preparation. The agent also reviews the committed
-changes and required verification. After checks pass, it fills the already
-initialized `.inux/pr.md`, with `## Title` and the technical summary under
-`## Description`. Failed checks leave that draft unchanged.
-Its complete reusable template is [assets/pr.md](skills/inux/assets/pr.md); writing
-instructions live in the [PR technical-summary section](skills/inux/references/pr.md#technical-summary).
-The format retains the earlier Inux branch, implementation/root cause, code,
-UI, database, and infrastructure fields. The completed summary stays inside
-pr.md, so no extra task file is created.
-
-Edit pr.md directly or refine either section through chat. `/inux pr publish`
-reruns readiness checks and publishes the saved, reviewed content. Title and
-description requests fill/refine only that initialized section without running
-preparation. Incomplete or stale drafts need preparation/refinement before publishing;
-missing task files indicate incomplete initialization and do not trigger a reset. Preparation does
-not push or create a PR. Git inspection and gh publication stay in the skill;
-ix performs file management and regex validation only.
-
-## Convention checks used by the skill
-
-Team policy lives in [PR readiness checks](skills/inux/references/pr.md#readiness-checks):
-
-- Branch: `<type>/<TICKET-ID>-<lowercase-kebab-description>` with a supported type
-  and the exact active ticket.
-- Commit: `<TICKET-ID>: <Capitalized present-tense implementation summary>`;
-  exactly one line, no body, and no duplicate active-ticket token.
-- PR title defaults to `<TICKET-ID>: <Capitalized action summary>`.
-
-Explicit user/repository policies override their stated defaults. Nonconforming
-history does not redefine the rule. ix remains a policy-neutral Go regex matcher;
-the skill supplies the resolved default/override regex. Every entire supplied
-value must match; inputs are preserved without trimming. Regex validates
-structure, while the agent checks duplicates, meaning, and implementation accuracy.
+**1. Install the skill**
 
 ```sh
-ix check-branch '^(feature|bugfix|hotfix|chore|refactor|perf|test|release)/OQG3-3776-[a-z0-9]+(-[a-z0-9]+)*$' 'bugfix/OQG3-3776-home-step-number-centering'
-ix check-commit '^OQG3-3776: [A-Z][^\r\n]+$' 'OQG3-3776: Fix QGC home step number centering'
+npx skills add vinod-rightmo/inux --skill inux --global --agent codex cursor
 ```
 
-The ticket in these examples is resolved from the active task. Read full stored
-commit messages and remove at most their single terminal LF before validation;
-do not use only subjects or strip bodies/whitespace. Check every introduced
-commit, including merges, against the convention baseline; separately inspect
-the actual PR target diff. Failed input positions map back to commit SHAs.
+**2. Set up the tools**
 
-Checks return `{"ok":true}` and exit 0 on success; invalid patterns, mismatches,
-or missing arguments produce JSON errors on stderr and exit 1. Checks do not
-change files or call Git/network. Git ref validity and semantic rules are checked
-separately. The CLI accepts alternate policies, including empty input only when
-its supplied pattern explicitly allows it; that is not the team's default.
+Open a new conversation in Codex or Cursor and run:
 
-## Repository commits and automated releases
+```text
+/inux setup
+```
 
-This repository uses [Conventional Commits](https://www.conventionalcommits.org/):
-`fix: correct task cleanup`, `feat: add a CLI command`, or `docs: explain setup`.
-Use `feat!:` or a `BREAKING CHANGE:` footer for incompatible changes.
-Squash-merge feature PRs with a Conventional Commit title; that title becomes
-main's commit message. `docs:` and `chore:` alone do not request a new release.
-The team conventions above describe defaults for projects using the skill.
+Setup installs or checks `ix`, `gh`, and `acli` in `~/.inux/tools/bin/`,
+checks authentication, and cleans up its temporary downloads.
 
-[Release Please](https://github.com/googleapis/release-please) manages versions,
-CHANGELOG.md, release PRs, and tags.
-[GoReleaser](https://goreleaser.com/) builds, packages, checksums, and publishes.
-[The workflow](.github/workflows/release.yml) tests on Ubuntu, Windows, and macOS
-and validates all release packages before running release automation.
+**3. Start a task**
 
-The normal workflow is:
+```text
+/inux task PROJECT-123
+/inux estimate
+```
 
-1. Make and review changes; merge them into main with Conventional Commits.
-2. Release Please opens or updates a release PR with the calculated version,
-   CHANGELOG.md, the release manifest, and the skill's metadata.version.
-3. Review and merge that release PR when ready to release.
-4. After tests pass, Release Please creates the matching tag and a draft release.
-   GoReleaser checks out that exact tag, builds the downloads, and publishes the
-   draft only after uploading the assets. Release Please's notes are preserved.
+After implementing and committing your changes, prepare the pull request:
 
-There are no manual version edits, tags, change fragments, or executable uploads
-in the normal process. The first release is configured as 0.0.1. Subsequent
-`fix:` changes bump patch, `feat:` changes bump minor, and breaking changes bump
-major. The skill and ix share that version; ix reports it through `--version`.
-The Go version in go.mod is a compiler requirement, not the Inux version.
+```text
+/inux pr
+```
 
-The initial [release manifest](.release-please-manifest.json) is empty because
-nothing has been released. Release Please maintains it after the first release.
-Its [configuration](release-please-config.json) uses the Go strategy and updates
-the annotated version line in skills/inux/SKILL.md. Keep the
-`x-release-please-version` comment so the standard updater can find that line.
-[.goreleaser.yaml](.goreleaser.yaml) defines the release assets.
+## Commands
 
-One-time GitHub setup: in **Settings → Actions → General → Workflow permissions**,
-enable **Allow GitHub Actions to create and approve pull requests**. The workflow
-uses GITHUB_TOKEN; no personal token is required. It does not auto-merge PRs.
-Bot-created release PRs do not trigger ordinary pull_request workflows with this
-token; the full test/package checks run on main before release creation. If you
-later require checks on the release PR itself, configure a GitHub App token for
-Release Please so its PR events trigger CI.
+| Command | What it does |
+| --- | --- |
+| `/inux help` | Show the available commands. |
+| `/inux setup` | Set up tools and check sign-in. |
+| `/inux task <id>` | Load a Jira ticket and create the task files. |
+| `/inux estimate [request]` | Draft, improve, or explain an estimate. |
+| `/inux pr [request]` | Prepare a PR draft, refine it, or explain it. |
 
-To verify locally with Go and GoReleaser installed:
+Use plain language to refine your drafts:
+
+```text
+/inux estimate improve the reasons
+/inux pr improve the title
+/inux pr improve the description
+```
+
+## Your task files
+
+Each task uses three files in your project:
+
+```text
+.inux/
+├── ticket.md     Jira ticket details
+├── estimate.md   Estimate and reasons
+└── pr.md         PR title and description
+```
+
+The technical summary lives inside the PR description. You can edit the drafts
+directly or ask the agent to refine them.
+
+**Starting a task replaces the previous `.inux/` task files after the ticket
+is fetched successfully.** The folder is excluded from Git locally.
+
+## Publish when ready
+
+Drafting and refining stay local. Publishing requires an explicit request:
+
+```text
+/inux estimate publish
+/inux pr publish
+```
+
+Estimate publishing posts a Jira comment. PR publishing pushes the task branch
+and creates or updates a draft GitHub PR after readiness checks pass.
+
+To try the normal actions without publishing, add **“do not publish”** to your request.
+
+<details>
+<summary><strong>Developing and releasing Inux</strong></summary>
+
+### Local checks
+
+The skill instructions live in [skills/inux](skills/inux/SKILL.md).
+The Go CLI source lives in [tools/ix](tools/ix/).
 
 ```sh
 (cd tools/ix && go test ./...)
@@ -187,52 +101,30 @@ goreleaser check
 goreleaser release --snapshot --clean
 ```
 
-Snapshot mode never publishes. It writes to ignored dist/ and uses a development
-version for ix. Released binaries use the exact tag version. Commit only source
-and configuration; GitHub builds Windows x64, Ubuntu/Linux x64 and ARM64, and
-macOS Intel and Apple Silicon executables, plus inux-skill.zip,
-THIRD_PARTY_NOTICES.txt, and checksums.txt.
+The last two commands require GoReleaser. Snapshot mode builds locally without
+publishing.
 
-If publishing fails after the draft/tag is created, rerun only the failed publish
-job. Alternatively, run **Test and release** manually from main with that existing
-tag. Recovery tests that exact tag, verifies its skill/manifest versions and an
-existing draft, and resumes GoReleaser. Already published releases are rejected;
-release a correction under a new version.
+### Releases
 
-Install the skill ZIP, then use `/inux setup` to install matching tools from
-`vinod-rightmo/inux`. Setup verifies checksums and ix --version. gh/acli keep
-their own vendor versions. Users need no Go compiler or release tooling.
+Use Conventional Commits in this repository:
 
-Templates stay under skills/inux/assets/: ix task copies estimate.md; the agent
-copies pr.md and writes ticket.md after successful Jira retrieval. PR preparation
-later fills the initialized PR template. Both assets are checked before task
-replacement. There is no separate technical-summary task file.
+| Commit | Version change |
+| --- | --- |
+| `fix: ...` | Patch |
+| `feat: ...` | Minor |
+| `feat!: ...` | Major |
 
-## Source structure
+Merge changes into `main`. Release Please opens a release PR with the version
+and changelog. Review and merge that PR; GitHub then tests, builds, and publishes
+the downloads with GoReleaser. The skill and `ix` share one version.
 
-```text
-tools/ix/
-  main.go                   Entry point and JSON error reporting
-  go.mod
-  go.sum
-  internal/
-    run.go                  Dispatch and help
-    commands/               One handler file per command
-      task.go
-      adf.go
-      check_branch.go
-      check_commit.go
-    shared/                 Shared operations
-      workspace.go
-      files.go
-      conventions.go
-  tests/
-    run_test.go
-    conventions_test.go
-```
+Keep the `x-release-please-version` comment in `SKILL.md`; it lets Release Please
+update the skill version automatically.
 
-The root main package calls the dispatcher in internal/run.go. commands contains
-only the four command handlers; shared holds workspace operations, atomic writing,
-and regex matching. Existing tests live in tests and exercise the dispatcher’s
-Run function. To add a command, add its handler and a dispatcher case, then test
-through Run. There is no command registry or CLI framework.
+[Release workflow](.github/workflows/release.yml) ·
+[Release configuration](release-please-config.json) ·
+[Build configuration](.goreleaser.yaml) ·
+[CLI reference](skills/inux/references/cli.md) ·
+[Implementation decisions](docs/decisions.md)
+
+</details>

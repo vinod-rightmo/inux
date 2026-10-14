@@ -21,19 +21,3 @@ and pr.md. No branch, commit, PR readiness check, or publication is needed.
 5. Verify all three files exist and both drafts match their asset templates.
    Report their paths. On any write failure, report the partial task without
    claiming success or automatically resetting it again.
-
-## Testing mode
-
-Also exercise the test sections of [help.md](help.md) and [setup.md](setup.md).
-In disposable projects, verify:
-
-- The full task workflow creates ticket.md plus exact estimate.md/pr.md template
-  copies, adds one local Git exclusion, and preserves .gitignore/rules/siblings.
-- A repeat task replaces every old task/custom file and restores both drafts;
-  the exclusion is not duplicated. Plain projects need no Git metadata.
-- A missing/unreadable estimate or PR template stops before calling ix, preserving
-  every existing task file. CLI failure stops before PR/ticket writes.
-- With a real ID, compare the saved disposable ticket with the fetched details.
-  Missing access is BLOCKED; local formatting may use a labelled fixture.
-- A failing acli stub or changed task snapshot prevents replacement. Use only
-  a disposable stub directory, never modify installed acli.

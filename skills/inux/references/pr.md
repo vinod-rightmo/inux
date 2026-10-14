@@ -8,7 +8,7 @@ trigger them. Publishing requires explicit intent and the reviewed saved draft.
 
 ## Prepare
 
-Read ticket.md, any existing pr.md, and [Readiness checks](#readiness-checks). Complete all
+Read ticket.md, the initialized pr.md, and [Readiness checks](#readiness-checks). Complete all
 readiness checks before filling or changing the initialized pr.md. On failure, preserve the
 draft and report the blocker; do not fix Git state automatically.
 
@@ -20,7 +20,6 @@ rather than resetting the draft to the template. Title defaults to
 `<TICKET-ID>: <Capitalized action summary>` unless user/repository rules differ.
 Keep required PR-template sections. Preserve accurate existing developer edits.
 
-A legacy pull-request.md may supply evidence; do not delete or publish it.
 Recheck branch, HEAD, PR target/baseline revisions, ticket, and tree before
 saving. Report the path and readiness outcome. Preparation does not push or publish.
 
@@ -60,7 +59,7 @@ create another summary file or claim unobserved verification.
 
 ## Explain
 
-Read ticket.md and any existing pr.md. Answer the requested question using
+Read ticket.md and the initialized pr.md. Answer the requested question using
 [be-human.md](be-human.md), the saved draft, and available verified evidence.
 Inspect relevant code or Git state only when needed to answer accurately.
 Distinguish a previous readiness result from the current state; an explanation
@@ -181,58 +180,3 @@ or follow-up. Retain required PR-template sections without duplicating the summa
 For a completed summary, replace every placeholder. A focused refinement reports
 unrelated gaps without silently rewriting them. Preserve accurate developer notes
 and mention tests as passed only when observed. The summary appears once, inside Description.
-
-## Testing mode
-
-Follow the shared testing rules in SKILL.md. Run the normal selected action on
-disposable inputs, plus its checks below. A bare test runs prepare, title,
-description, and explain; publishing remains skipped.
-
-### Prepare test
-
-Build a disposable Git fixture with local bare origin, main/dev branches,
-a task branch with a small committed change, and an excluded task. Use the
-team defaults from [Readiness checks](#readiness-checks); test explicit overrides separately.
-Configure identity only there. Local origin supplies fixture repository
-identity in place of GitHub; this does not prove live access/freshness.
-
-Initialize both draft templates using the task workflow. Verify readiness,
-including local-origin refresh, passes before pr.md is filled with a completed
-Title and Description. Failed checks preserve the initialized template or saved
-draft exactly. Ticket/estimate and unrelated files remain unchanged; no separate
-summary artifact is created.
-
-Use separate blocked cases for dirty/untracked files, base=current branch, no
-commits/diff, missing target/baseline refs, and invalid branch/commit. Preserve
-any prior draft.
-An earlier bad commit followed by a good commit must still block and identify
-its SHA. With [cli.md](cli.md), test whole-value regex matching, invalid regexes,
-missing arguments, and correct 1-based positions for multiple failing values.
-Reject wrong-ticket prefixes, lowercase summaries, duplicate ticket tokens, and
-multiline bodies. A valid full message with only its stored terminal LF must pass.
-Also test a different PR target and convention baseline without conflating ranges.
-
-### Title test
-
-Use the initialized PR template in a disposable task. Fill only Title without
-running readiness; Description remains exactly as initialized. Then refine a
-verbose accurate title, keeping its intent and required ticket/prefix.
-Description, all other PR content, and other task files stay byte-for-byte unchanged.
-
-### Description test
-
-Use the initialized PR template in a disposable task with known implementation
-evidence. Fill only Description without running readiness; Title stays unchanged.
-Then preserve a useful developer note while correcting an unsupported claim. Validate
-summary fields/order, branch, repository, and impact claims. Title and other task
-files stay byte-for-byte unchanged; the summary appears once inside Description.
-
-### Explain test
-
-Explain a disposable draft or its recorded readiness result. Verify the answer
-matches that evidence and every task file remains byte-for-byte unchanged.
-
-### Publish test
-
-Report SKIPPED: PR publishing is excluded. Do not push or create/update a GitHub
-PR. Use preparation tests for readiness and draft validation.
