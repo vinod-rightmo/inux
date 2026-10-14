@@ -94,6 +94,11 @@ To try the normal actions without publishing, add **“do not publish”** to yo
 
 The skill instructions live in [skills/inux](skills/inux/SKILL.md).
 The Go CLI source lives in [tools/ix](tools/ix/).
+`ix task TEMPLATES_DIR [PROJECT]` reads estimate.md and pr.md from the assets
+directory before replacing the task, then copies both drafts and creates empty
+ticket.md. `ix task --snapshot [PROJECT]` captures task state; pass that token
+with `--expect SNAPSHOT` before the assets argument to reject intervening edits.
+The agent fetches Jira and fills ticket.md; filesystem checks stay inside ix.
 
 ```sh
 (cd tools/ix && go test ./...)

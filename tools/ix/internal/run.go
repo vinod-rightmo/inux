@@ -9,7 +9,8 @@ import (
 )
 
 const help = `ix --version                              Show the installed CLI version.
-ix task TEMPLATE [PROJECT]                 Replace .inux/ and copy the estimate template.
+ix task --snapshot [PROJECT]              Read a compact .inux state token without writing.
+ix task [--expect SNAPSHOT] TEMPLATES_DIR [PROJECT] Replace .inux/ with an empty ticket and both drafts.
 ix adf INPUT [OUTPUT]                       Convert Markdown; omit OUTPUT to print ADF JSON.
 ix check-branch PATTERN NAME [NAME...]      Check branch names against one project Go regex.
 ix check-commit PATTERN MESSAGE [MESSAGE...] Check commit messages against one project Go regex.

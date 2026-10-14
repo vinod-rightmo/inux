@@ -9,25 +9,21 @@ release builds use the same version as the skill, local unversioned builds use d
 
 ```text
 <cli> --version
-<cli> task ESTIMATE_TEMPLATE PROJECT
+<cli> task --snapshot PROJECT
+<cli> task [--expect SNAPSHOT] TEMPLATES_DIR PROJECT
 <cli> adf INPUT.md OUTPUT.json
 <cli> check-branch PATTERN NAME [NAME...]
 <cli> check-commit PATTERN MESSAGE [MESSAGE...]
 ```
 
-Resolve ESTIMATE_TEMPLATE to [../assets/estimate.md](../assets/estimate.md) relative
-to the skill and pass its absolute path. In direct CLI use, PROJECT is optional
-and defaults to the current directory. ix never fetches Jira or invokes another CLI.
+For `task`, pass the skill assets directory; ix reads both estimate.md and
+pr.md before replacement, copies both drafts, and creates empty ticket.md.
+`--snapshot` returns an opaque state token without writes; `--expect` rejects
+changes before replacement. Follow [task.md](task.md) for the complete workflow
+and Git exclusion. The agent passes an absolute PROJECT;
+direct CLI use may omit it to use the current directory. ix never fetches Jira
+or invokes another CLI.
 
-- `task` replaces the entire PROJECT/.inux directory, including all old task
-  files, and creates estimate.md from the supplied template. The full skill
-  workflow validates both assets first, calls ix after successful Jira retrieval,
-  then copies assets/pr.md and writes ticket.md. ix itself copies only the estimate.
-  Missing/unreadable estimate input, directory links, and unsupported checkouts
-  fail before deletion.
-- `task` adds .inux/ to .git/info/exclude directly, preserving existing entries
-  and .gitignore. Pass an ordinary checkout root; linked worktrees and ancestor
-  discovery are outside this MVP. Plain directories also work.
 - `adf` reads UTF-8 Markdown and writes ADF JSON. Omit OUTPUT for ADF on stdout.
   It never replaces its Markdown input, including aliases.
 
