@@ -8,6 +8,9 @@ metadata:
 
 # Inux
 
+For `/inux help`, read [help.md](references/help.md), return its response block,
+and stop. Help needs no project inspection, tool checks, or other references.
+
 Infer the action from plain language. Load only its reference and follow the
 requested section plus required shared guidance. Reuse instructions already
 provided in this conversation; reread only when changed or incomplete.

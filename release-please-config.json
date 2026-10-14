@@ -11,6 +11,10 @@
         {
           "type": "generic",
           "path": "skills/inux/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "skills/inux/references/help.md"
         }
       ]
     }
