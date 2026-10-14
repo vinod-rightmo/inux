@@ -1,0 +1,66 @@
+name: Test and release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inux-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache-dependency-path: tools/ix/go.sum
+      - name: Test the CLI
+        working-directory: tools/ix
+        run: go test ./...
+      - name: Verify the versioned native build
+        shell: bash
+        working-directory: tools/ix
+        run: |
+          version=$(python3 "$GITHUB_WORKSPACE/scripts/release.py" --version)
+          go build -trimpath -ldflags "-X ix/internal.Version=$version" -o "$RUNNER_TEMP/ix-smoke.exe" .
+          test "$("$RUNNER_TEMP/ix-smoke.exe" --version)" = "ix $version"
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache-dependency-path: tools/ix/go.sum
+      - name: Build binaries, skill ZIP, and checksums
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/release.py --tag "$RELEASE_TAG"
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          gh release create "$RELEASE_TAG" dist/release/*
+          --repo "$GH_REPO" --verify-tag
+          --title "Inux $RELEASE_TAG" --generate-notes
