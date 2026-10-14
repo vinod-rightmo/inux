@@ -100,7 +100,7 @@ missing task files indicate incomplete initialization and do not trigger a reset
 not push or create a PR. Git inspection and gh publication stay in the skill;
 ix performs file management and regex validation only.
 
-## Convention checks
+## Convention checks used by the skill
 
 Team policy lives in [PR readiness checks](skills/inux/references/pr.md#readiness-checks):
 
@@ -133,49 +133,75 @@ change files or call Git/network. Git ref validity and semantic rules are checke
 separately. The CLI accepts alternate policies, including empty input only when
 its supplied pattern explicitly allows it; that is not the team's default.
 
-## Build and release
+## Repository commits and automated releases
 
-GitHub builds the executables. Commit source/configuration only; dist/ stays
-ignored. One version is shared by the skill and ix: the quoted
-`metadata.version` in skills/inux/SKILL.md. ix reports it through `--version`.
+This repository uses [Conventional Commits](https://www.conventionalcommits.org/):
+`fix: correct task cleanup`, `feat: add a CLI command`, or `docs: explain setup`.
+Use `feat!:` or a `BREAKING CHANGE:` footer for incompatible changes.
+Squash-merge feature PRs with a Conventional Commit title; that title becomes
+main's commit message. `docs:` and `chore:` alone do not request a new release.
+The team conventions above describe defaults for projects using the skill.
+
+[Release Please](https://github.com/googleapis/release-please) manages versions,
+CHANGELOG.md, release PRs, and tags.
+[GoReleaser](https://goreleaser.com/) builds, packages, checksums, and publishes.
+[The workflow](.github/workflows/release.yml) tests on Ubuntu, Windows, and macOS
+and validates all release packages before running release automation.
+
+The normal workflow is:
+
+1. Make and review changes; merge them into main with Conventional Commits.
+2. Release Please opens or updates a release PR with the calculated version,
+   CHANGELOG.md, the release manifest, and the skill's metadata.version.
+3. Review and merge that release PR when ready to release.
+4. After tests pass, Release Please creates the matching tag and a draft release.
+   GoReleaser checks out that exact tag, builds the downloads, and publishes the
+   draft only after uploading the assets. Release Please's notes are preserved.
+
+There are no manual version edits, tags, change fragments, or executable uploads
+in the normal process. The first release is configured as 0.0.1. Subsequent
+`fix:` changes bump patch, `feat:` changes bump minor, and breaking changes bump
+major. The skill and ix share that version; ix reports it through `--version`.
 The Go version in go.mod is a compiler requirement, not the Inux version.
 
-To publish a release:
+The initial [release manifest](.release-please-manifest.json) is empty because
+nothing has been released. Release Please maintains it after the first release.
+Its [configuration](release-please-config.json) uses the Go strategy and updates
+the annotated version line in skills/inux/SKILL.md. Keep the
+`x-release-please-version` comment so the standard updater can find that line.
+[.goreleaser.yaml](.goreleaser.yaml) defines the release assets.
 
-1. Change metadata.version in SKILL.md, for example to "0.0.2".
-2. Commit and push that change to main.
-3. Tag that commit and push the matching tag:
+One-time GitHub setup: in **Settings → Actions → General → Workflow permissions**,
+enable **Allow GitHub Actions to create and approve pull requests**. The workflow
+uses GITHUB_TOKEN; no personal token is required. It does not auto-merge PRs.
+Bot-created release PRs do not trigger ordinary pull_request workflows with this
+token; the full test/package checks run on main before release creation. If you
+later require checks on the release PR itself, configure a GitHub App token for
+Release Please so its PR events trigger CI.
 
-```sh
-git tag v0.0.2
-git push origin v0.0.2
-```
-
-[The workflow](.github/workflows/release.yml) tests the CLI on Ubuntu, Windows,
-and macOS. A version tag then builds five binaries, packages inux-skill.zip,
-generates checksums, and publishes them to GitHub Releases. A tag/version
-mismatch fails before publishing. No Changesets, release bot, or manually
-uploaded executables are needed. The workflow uses the repository's built-in
-GitHub token; no extra release secret is required.
-
-[The release script](scripts/release.py) uses Python's standard library and Go.
-To test/build locally, with Go and Python 3 available:
+To verify locally with Go and GoReleaser installed:
 
 ```sh
-cd tools/ix
-go test ./...
-cd ../..
-python3 scripts/release.py
+(cd tools/ix && go test ./...)
+goreleaser check
+goreleaser release --snapshot --clean
 ```
 
-Outputs are under dist/release/. The script never publishes; only the tag-triggered
-workflow does. The release includes Windows x64, Ubuntu/Linux x64 and ARM64,
-and macOS Intel and Apple Silicon binaries, the skill ZIP, third-party notices,
-and checksums.txt. Users need Git for project operations, but no Go compiler.
+Snapshot mode never publishes. It writes to ignored dist/ and uses a development
+version for ix. Released binaries use the exact tag version. Commit only source
+and configuration; GitHub builds Windows x64, Ubuntu/Linux x64 and ARM64, and
+macOS Intel and Apple Silicon executables, plus inux-skill.zip,
+THIRD_PARTY_NOTICES.txt, and checksums.txt.
+
+If publishing fails after the draft/tag is created, rerun only the failed publish
+job. Alternatively, run **Test and release** manually from main with that existing
+tag. Recovery tests that exact tag, verifies its skill/manifest versions and an
+existing draft, and resumes GoReleaser. Already published releases are rejected;
+release a correction under a new version.
 
 Install the skill ZIP, then use `/inux setup` to install matching tools from
 `vinod-rightmo/inux`. Setup verifies checksums and ix --version. gh/acli keep
-their own vendor versions. Existing projects/tasks are unaffected by setup.
+their own vendor versions. Users need no Go compiler or release tooling.
 
 Templates stay under skills/inux/assets/: ix task copies estimate.md; the agent
 copies pr.md and writes ticket.md after successful Jira retrieval. PR preparation

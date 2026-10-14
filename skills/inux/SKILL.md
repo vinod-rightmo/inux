@@ -3,7 +3,7 @@ name: inux
 description: Set up Inux tools, start Jira tasks, draft or refine estimates and pull requests, and test workflows. Use for /inux commands and equivalent requests; publish only when explicitly requested.
 metadata:
   author: "Vinod Liyanage"
-  version: "0.0.1"
+  version: "0.0.1" # x-release-please-version
 ---
 
 # Inux

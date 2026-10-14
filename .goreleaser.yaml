@@ -1,0 +1,57 @@
+version: 2
+project_name: inux
+
+builds:
+  - id: ix
+    dir: tools/ix
+    binary: ix
+    env: [CGO_ENABLED=0]
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: [-mod=readonly, -trimpath]
+    ldflags:
+      - -s -w -X ix/internal.Version={{ .Version }}
+
+archives:
+  - id: executables
+    ids: [ix]
+    formats: [binary]
+    name_template: "ix-{{ .Os }}-{{ .Arch }}"
+  - id: skill
+    meta: true
+    formats: [zip]
+    name_template: inux-skill
+    wrap_in_directory: inux
+    files:
+      - src: skills/inux/SKILL.md
+        strip_parent: true
+      - src: skills/inux/agents/*
+        dst: agents
+        strip_parent: true
+      - src: skills/inux/assets/*
+        dst: assets
+        strip_parent: true
+      - src: skills/inux/references/*
+        dst: references
+        strip_parent: true
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+  extra_files:
+    - glob: THIRD_PARTY_NOTICES.txt
+
+changelog:
+  disable: true
+
+release:
+  github:
+    owner: vinod-rightmo
+    name: inux
+  use_existing_draft: true
+  mode: keep-existing
+  extra_files:
+    - glob: THIRD_PARTY_NOTICES.txt

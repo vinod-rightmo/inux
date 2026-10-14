@@ -4,7 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to retry publishing (for example v0.0.1)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,6 +27,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.sha }}
+          fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
           go-version: stable
@@ -31,36 +39,73 @@ jobs:
         run: go test ./...
       - name: Verify the versioned native build
         shell: bash
-        working-directory: tools/ix
         run: |
-          version=$(python3 "$GITHUB_WORKSPACE/scripts/release.py" --version)
-          go build -trimpath -ldflags "-X ix/internal.Version=$version" -o "$RUNNER_TEMP/ix-smoke.exe" .
+          version=$(sed -n 's/^  version: "\([^"]*\)".*/\1/p' skills/inux/SKILL.md)
+          test -n "$version"
+          cd tools/ix
+          go build -mod=readonly -trimpath -ldflags "-X ix/internal.Version=$version" -o "$RUNNER_TEMP/ix-smoke.exe" .
           test "$("$RUNNER_TEMP/ix-smoke.exe" --version)" = "ix $version"
+      - name: Validate all release packages without publishing
+        if: matrix.os == 'ubuntu-latest'
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: v2.18.3
+          args: release --snapshot --clean
 
-  release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+  release-please:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
+      issues: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: [test, release-please]
+    if: >-
+      always() && needs.test.result == 'success' &&
+      (needs.release-please.outputs.release_created == 'true' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
           go-version: stable
           cache-dependency-path: tools/ix/go.sum
-      - name: Build binaries, skill ZIP, and checksums
+      - name: Verify the reviewed release version and draft
+        shell: bash
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: python3 scripts/release.py --tag "$RELEASE_TAG"
-      - name: Publish release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: >-
-          gh release create "$RELEASE_TAG" dist/release/*
-          --repo "$GH_REPO" --verify-tag
-          --title "Inux $RELEASE_TAG" --generate-notes
+        run: |
+          version=$(sed -n 's/^  version: "\([^"]*\)".*/\1/p' skills/inux/SKILL.md)
+          test "$RELEASE_TAG" = "v$version"
+          manifest_version=$(jq -er '.["."]' .release-please-manifest.json)
+          test "$manifest_version" = "$version"
+          is_draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)
+          test "$is_draft" = true
+      - name: Build, upload, and publish the reviewed release
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: v2.18.3
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
