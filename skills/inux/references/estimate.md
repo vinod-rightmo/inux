@@ -1,71 +1,75 @@
 # Estimate
 
-Use only the section matching the request. Read [be-human.md](be-human.md) for
-writing. Bare `/inux estimate` fills the initialized template, otherwise improves
-existing content. Publication requires explicit intent.
+Use only the requested section. Bare `/inux estimate` fills an empty template or
+improves an existing draft. Read [be-human.md](be-human.md) once for writing.
+Publication requires explicit intent.
+
+## Work efficiently
+
+Batch independent reads/searches. Reuse current evidence; read only missing or
+changed context. Invoke known tool paths directly. Keep routine checks quiet.
 
 ## Generate
 
-Read [be-human.md](be-human.md), ticket.md, and the initialized estimate.md together.
-Estimate the ticket's requested end state. Inspect the likely affected code and
-nearby verification; widen the search only when a material uncertainty could
-change the estimate. Reuse relevant evidence already verified in this chat.
-Do not fetch Jira or inspect unrelated repository areas for a complete local ticket.
+Read ticket.md and estimate.md together; use its initialized structure without
+rereading the template asset. Estimate the requested end state, including completed
+work. Search the affected flow once, then read relevant code and coverage together.
+Stop when scope, effort, and material risks are understood. Further searches
+must answer a question that could change the estimate. Check project scoring
+guidance once; otherwise use the fallback below. Do not run tests.
 
-Fill the existing estimate, preserving supported developer decisions and the
-[template](../assets/estimate.md). Apply [Validation](#validation).
-Save only estimate.md after checking the active ticket again. Do one final
-consistency check and report the file. Do not run project tests merely to estimate
-future work; inspect existing coverage when it affects the estimate.
+Confirm expected behavior before choosing a fix. If ambiguity changes scope,
+check relevant Jira comments/attachments using the shared Jira execution rule;
+otherwise use local evidence. Record unresolved assumptions in Risk & Unknowns;
+keep proposed fixes conditional. Ask only when a useful estimate is blocked.
+
+Fill the draft, preserving supported developer decisions. Validate, recheck the
+active ticket, save only estimate.md, and verify the saved file once.
 
 ## Improve
 
-Read [be-human.md](be-human.md), ticket.md, and the complete estimate.md. For
-an unfilled template, report that generation is needed rather than resetting it.
-Refine the requested parts. Preserve accurate reasons, scores, scope decisions,
-and final SP. Inspect additional code only when the requested change needs new
-evidence; do not repeat the generation investigation for a wording edit.
-
-Use [Validation](#validation) to check changed content and dependent
-totals. Report unrelated incomplete fields without filling them or claiming the
-whole draft is complete. Change a developer's final SP only
-when the breakdown or an evidenced convention makes it unsupported; explain why.
-Recheck the active ticket, save only estimate.md, and verify it once. Do not
-initialize a task, fetch remote details, or run tests for prose refinement.
+Read ticket.md and the complete estimate together. Refine requested parts;
+wording edits preserve supported scores, scope, and SP without code investigation.
+Inspect new evidence only when needed. Change final SP only when unsupported by
+the breakdown or evidenced conventions; explain why.
+Validate changed fields and dependent totals; report unrelated incomplete fields.
+For empty templates, use Generate. Recheck the ticket, save only estimate.md,
+and verify once. Do not reset tasks, fetch Jira for wording edits, or run tests.
 
 ## Explain
 
-Read ticket.md and estimate.md. Explain the requested scores, reasons, scope,
-or final SP in plain language, using [be-human.md](be-human.md).
-Use the saved breakdown and evidence already available. Inspect more code only
-if the question cannot be answered from that evidence. Flag a contradiction
-instead of silently fixing it. Do not write files, run tests, or publish.
+Use the saved breakdown and current evidence; inspect more only when needed.
+Flag contradictions. Do not edit or publish.
 
 ## Publish
 
-Require explicit publishing intent. Read ticket.md and saved estimate.md;
-apply [Validation](#validation) without rewriting the draft.
-If incomplete, report the missing fields.
+Read ticket.md and estimate.md together; validate without rewriting.
+Report missing fields. Use private acli:
+`jira workitem comment list --key TICKET-ID --json --paginate`.
+Check duplicates and clarifications. If evidence contradicts the draft, stop and
+ask whether to revise; leave it unchanged. Report identical comments without
+posting; never replace unrelated comments.
 
-Use private acli to inspect existing comments. If identical content exists,
-report it without posting a duplicate; never replace an unrelated comment.
-Convert the saved Markdown with ix adf to temporary ADF JSON and inspect it.
-Use the installed acli comment-create body-file input with the exact ticket key;
-check its help for syntax. Do not reconstruct ADF by hand.
+Convert with private ix: `adf ABSOLUTE_ESTIMATE_PATH TEMPORARY_OUTPUT.json`.
+Inspect ADF and recheck ticket ID and saved content together before posting.
+Use private acli:
+`jira workitem comment create --key TICKET-ID --body-file ABSOLUTE_ADF_PATH --json`.
+Consult only exact subcommand help when needed. Never rebuild ADF manually.
+Inspect remote state before retrying uncertain writes. Remove temporary output.
+Report the returned comment/ticket URL; look it up only if missing. Preserve task files.
 
-Recheck ticket ID and saved content immediately before posting. Inspect remote
-comments before retrying an uncertain result. Remove temporary output and report
-the comment/ticket URL. Leave task files unchanged.
+## Writing and validation
 
-## Validation
+Preserve six rows, order, fields, and Markdown structure. Scores are nonnegative
+integers. Use the documented team scale, otherwise 0 for no meaningful work and
+1–3 for increasing complexity. Explain zeros. Keep reasons in their categories,
+uncertainty in Risk & Unknowns, and avoid double-counting.
 
-Preserve the template's six rows, their order, fields, and Markdown structure.
-Each score is a nonnegative integer with a specific reason. Use the documented
-team scale, otherwise 0 for no meaningful work and 1–3 for increasing complexity;
-explain zeros. Keep each reason in its category, uncertainty in Risk & Unknowns,
-and avoid double-counting distinct effort.
+Each reason is one plain sentence, usually 10–20 words. Omit code walkthroughs.
+Overall Reason covers the main effort and risk in one or two sentences, usually
+under 40 words. Chat replies need ticket, SP, file or URL, and material assumptions;
+expand when asked.
 
-Total Complexity Score equals the six scores. Final Estimate is numeric and
-ends in SP, supported by the work and any evidenced team convention. Do not
-invent a score-to-points formula. Overall Reason explains the dominant effort
-and risk. No blank fields, template placeholders, or unsupported claims remain.
+Total Complexity Score equals the six scores. Final Estimate is numeric, ends
+in SP, and is supported by the work; never invent a score-to-points formula.
+No blank fields, placeholders, or unsupported claims remain.
