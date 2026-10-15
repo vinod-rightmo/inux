@@ -1,6 +1,6 @@
 ---
 name: inux
-description: Set up Inux tools, start Jira tasks, create branches, commit changes, and draft or refine estimates and pull requests. Use for /inux commands and equivalent requests; publish only when explicitly requested.
+description: Set up Inux tools, start Jira tasks, create branches, commit changes, and draft or refine estimates, technical summaries, and pull requests. Use for /inux commands and equivalent requests; publish only when explicitly requested.
 metadata:
   author: "Vinod Liyanage"
   version: "0.0.1" # x-release-please-version
@@ -24,15 +24,19 @@ Ask only when intent is unclear. Help and setup need no project or ticket.
 | `/inux branch create` | [branch.md](references/branch.md) |
 | `/inux commit changes` | [commit.md](references/commit.md) |
 | `/inux estimate [request]` | [estimate.md](references/estimate.md) |
+| `/inux technical summary [request]` | [technical-summary.md](references/technical-summary.md) |
 | `/inux pr [request]` | [pr.md](references/pr.md) |
 
 For project work, use the explicit project or current checkout root.
 Branch/commit actions need no drafts or remote access; use known task context,
 reading the ticket header only when needed.
 
-Keep one flat `.inux/` with ticket.md, estimate.md, and pr.md;
-the technical summary belongs in pr.md's Description. Only task initializes it.
-For estimate/PR actions, require the ticket and selected draft. Read the active
+Task initializes one flat `.inux/` with ticket.md, estimate.md, and pr.md.
+Technical summaries go in pr.md's Description or the optional technical-summary.md,
+created by the standalone command; both use the shared summary reference.
+Estimate/PR actions require the ticket and selected draft; standalone summaries
+require the ticket and may create their output when writing; publishing requires
+the saved summary. Read the active
 ID from ticket.md's first heading; stop on a supplied-ID mismatch and recheck
 before saving/publishing. Report missing files without resetting the task.
 

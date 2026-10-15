@@ -72,38 +72,11 @@ dependencies, and read relevant ranges. Stop when claims are supported.
 
 Write one concise line under `## Title`, defaulting to
 `<TICKET-ID>: <Capitalized action summary>` unless overridden. Fill Description
-using Summary below and [writing guidance](be-human.md), keeping required sections
-and accurate developer notes. Complete Verification and recheck before saving.
+using [shared summary guidance](technical-summary.md#summary-content), keeping
+required sections and accurate developer notes. Complete Verification and recheck
+before saving.
 A successful write completes preparation; no routine readback or byte audit.
 Report the path and observed checks. Preparation does not push or publish.
-
-## Summary
-
-Keep the technical summary once inside Description; never create a separate file.
-Explain the result, mechanism, old behavior/cause, and relevant impacts or limits.
-Use only supported claims; report material uncertainty and incomplete work.
-
-- Branch name: exact current name; keep the label's two trailing spaces.
-- Fix / implementation: a short paragraph explaining what happens when the user
-  acts, followed by how the app achieves it. Add a brief verified example if useful.
-- Root cause: a short paragraph explaining what the app did before, which action
-  was missing/incorrect, and the problem the user saw. Use None for non-defect work.
-- Impacted services: affected repository names only, such as `qr-web-frontend`;
-  no organization prefixes, URLs, or workflow descriptions. Resolve from
-  origin/GitHub, falling back to the repository root name.
-- Core modules/sections: affected workflows/features, not a file log.
-- UI, DB, indexes, environment, infra: brief evidenced changes, or None when
-  verified unaffected. Include indirect impacts/other services when code indicates them.
-
-Use familiar words and simple sentences, one action or idea each, in event order.
-The opening must make sense on its own. Introduce internal terms only when needed;
-avoid repetition and sentences combining several steps. Each explanation stays
-as a paragraph on its existing label line, without numbered steps or nested bullets.
-Retain field-label bullets, blank lines between sections/before bullets, and no
-blank lines between field bullets. Add `- Important notes:` after Root cause only
-for a supported constraint, risk, or follow-up that matters to the reviewer.
-Replace all placeholders in a completed draft. Routine passing checks belong in
-the completion report; claim success only when observed.
 
 ## Verification and recheck
 
@@ -122,8 +95,9 @@ relevant state changed. Publication also requires the saved draft to be unchange
 ## Publish
 
 Run the Git gate, then read full ticket.md and the saved draft. Require matching
-ticket, a completed single-line Title, a complete Description, and no placeholders. If
-incomplete, request preparation/refinement; do not draft during publication.
+ticket, a completed single-line Title, and a Description following
+[shared summary guidance](technical-summary.md#summary-content), with no placeholders.
+If incomplete, request preparation/refinement; do not draft during publication.
 Compare the saved summary/messages with the full diff, resolve material gaps,
 and report stale content instead of rewriting it. Complete Verification.
 
@@ -142,7 +116,8 @@ state before retrying uncertain writes. Remove temporary output; keep pr.md unch
 No target, fetch, or readiness pass is needed. Read ticket.md/pr.md, preserve
 unrequested sections, and reuse verified evidence. Check branch/HEAD before
 relying on earlier implementation evidence; inspect relevant committed changes
-only for a material gap. Apply Summary/writing guidance as needed.
+only for a material gap. Use [writing guidance](be-human.md); for Description,
+apply [shared summary guidance](technical-summary.md#summary-content).
 
 For Title, edit only its concise line using the default format above. For
 Description, edit only the requested content; preserve accurate notes and report

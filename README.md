@@ -1,6 +1,6 @@
 # Inux
 
-Start Jira tasks, create branches, commit changes, and prepare estimates and pull requests from your coding agent.
+Start Jira tasks, create branches, commit changes, and prepare estimates, technical summaries, and pull requests from your coding agent.
 
 **Codex & Cursor · macOS, Linux & Windows**
 
@@ -50,6 +50,7 @@ After implementing your changes, commit and prepare the pull request:
 | `/inux branch create` | Create and switch to a local task branch. |
 | `/inux commit changes` | Stage intended changes and create a local commit. |
 | `/inux estimate [request]` | Draft, improve, or explain an estimate. |
+| `/inux technical summary [request]` | Create, refine, or publish `.inux/technical-summary.md` to Jira. |
 | `/inux pr [request]` | Prepare a PR draft, refine it, or explain it. |
 
 Branch creation starts at current HEAD unless you supply another starting ref.
@@ -78,7 +79,7 @@ Commit checks use the chosen target branch to exclude inherited history.
 
 ## Your task files
 
-Each task uses three files in your project:
+Each task starts with three files in your project:
 
 ```text
 .inux/
@@ -87,8 +88,9 @@ Each task uses three files in your project:
 └── pr.md         PR title and description
 ```
 
-The technical summary lives inside the PR description. You can edit the drafts
-directly or ask the agent to refine them.
+Run `/inux technical summary` to create an optional `.inux/technical-summary.md`.
+It uses the same summary instructions as the PR description. Each command edits
+its own file. You can edit the drafts directly or ask the agent to refine them.
 
 **Starting a task replaces the previous `.inux/` task files after the ticket
 is fetched successfully.** The folder is excluded from Git locally.
@@ -99,11 +101,13 @@ Drafting and refining stay local. Publishing requires an explicit request:
 
 ```text
 /inux estimate publish
+/inux technical summary publish
 /inux pr publish
 ```
 
-Estimate publishing posts a Jira comment. PR publishing pushes the task branch
-and creates or updates a draft GitHub PR after readiness checks pass.
+Estimate and technical-summary publishing post the saved file as a Jira comment.
+PR publishing pushes the task branch and creates or updates a draft GitHub PR
+after readiness checks pass.
 
 To try the normal actions without publishing, add **“do not publish”** to your request.
 

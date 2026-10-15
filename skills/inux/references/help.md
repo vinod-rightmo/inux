@@ -15,8 +15,10 @@ Inux v0.0.1 — Vinod Liyanage
 | `/inux branch create` | Create and switch to a local task branch. |
 | `/inux commit changes` | Stage intended changes and create a local commit. |
 | `/inux estimate [request]` | Draft, improve, explain, or publish an estimate. |
+| `/inux technical summary [request]` | Create, refine, or publish a standalone summary to Jira. |
 | `/inux pr [request]` | Prepare, refine, explain, or publish a PR. |
 
-Publishing requires an explicit `/inux estimate publish` or `/inux pr publish` request.
+Publishing requires an explicit `/inux estimate publish`,
+`/inux technical summary publish`, or `/inux pr publish` request.
 ```
 <!-- x-release-please-end -->
