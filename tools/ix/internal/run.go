@@ -12,8 +12,6 @@ const help = `ix --version                              Show the installed CLI v
 ix task --snapshot [PROJECT]              Read a compact .inux state token without writing.
 ix task [--expect SNAPSHOT] TEMPLATES_DIR [PROJECT] Replace .inux/ with an empty ticket and both drafts.
 ix adf INPUT [OUTPUT]                       Convert Markdown; omit OUTPUT to print ADF JSON.
-ix check-branch PATTERN NAME [NAME...]      Check branch names against one project Go regex.
-ix check-commit PATTERN MESSAGE [MESSAGE...] Check commit messages against one project Go regex.
 PROJECT defaults to the current directory. No downloads, authentication, or publishing.
 `
 
@@ -38,10 +36,6 @@ func Run(args []string, out io.Writer) error {
 		return commands.Task(args[1:], out)
 	case "adf":
 		return commands.ADF(args[1:], out)
-	case "check-branch":
-		return commands.CheckBranch(args[1:], out)
-	case "check-commit":
-		return commands.CheckCommit(args[1:], out)
 	default:
 		return errors.New("unknown command; see --help")
 	}

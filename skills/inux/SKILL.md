@@ -39,8 +39,9 @@ before saving/publishing. Report missing files without resetting the task.
 Private tools live in `<storage>/tools/bin/` (`.exe` on Windows); storage defaults
 to `<user-home>/.inux`. Honor an explicit storage override. Invoke gh/acli by
 absolute private paths and Git directly. [task.md](references/task.md) covers
-`ix task` and ticket formatting. Branch, commit, and PR references include their
-own convention checks; do not load PR guidance for local Git actions.
+`ix task` and ticket formatting. The agent checks branch and commit conventions
+directly using the applicable action reference; no ix validator or generated
+validation script is needed. Do not load PR guidance for local Git actions.
 Read [cli.md](references/cli.md) for ADF conversion or direct CLI usage.
 Outside setup, invoke required tools directly and report missing tools; do not
 install, log in, or probe versions.

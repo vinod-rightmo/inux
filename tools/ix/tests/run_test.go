@@ -183,7 +183,7 @@ func TestADFAndInputProtection(t *testing.T) {
 }
 
 func TestInvalidArguments(t *testing.T) {
-	for _, args := range [][]string{{"unknown"}, {"adf"}, {"task"}, {"task", "one", "two", "three"}, {"init", "template"}, {"reset", "template"}, {"remove"}, {"adf", "a", "b", "c"}} {
+	for _, args := range [][]string{{"unknown"}, {"check-branch", ".*", "branch"}, {"check-commit", ".*", "message"}, {"adf"}, {"task"}, {"task", "one", "two", "three"}, {"init", "template"}, {"reset", "template"}, {"remove"}, {"adf", "a", "b", "c"}} {
 		if err := app.Run(args, &bytes.Buffer{}); err == nil {
 			t.Fatal("accepted invalid arguments", args)
 		}

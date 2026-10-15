@@ -21,17 +21,13 @@ scope and convention are clear. Accept explicit paths or a commit message.
    Inux repository itself. Do not infer an override merely from old history.
    Under the default, require exactly one line:
    `<TICKET-ID>: <Capitalized present-tense summary>`, with the active ticket
-   exactly once. Stop on a supplied-ticket mismatch. Validate with absolute
-   private ix: `check-commit PATTERN MESSAGE`, substituting the escaped exact
-   ticket in this Go regex:
-
-   ```regex
-   ^TICKET: [A-Z][^\r\n]+$
-   ```
-
-   For an override, use its validator if supplied or check its stated rules
-   directly. Validate only the proposed message, not historical commits. No branch
-   naming or PR target validation is required for this action.
+   exactly once, followed by a colon and one space. The summary starts with an
+   uppercase letter and describes the change in present tense. Check the proposed
+   message directly; reject bodies, duplicate ticket tokens, and extra prefixes.
+   Stop on a supplied-ticket mismatch. For an override, use its validator if
+   required or check its stated rules directly. No ix call or generated validation
+   script is needed. Validate only the proposed message, not historical commits.
+   No branch naming or PR target validation is required for this action.
 4. Reuse observed verification while the relevant changes are unchanged. Run
    missing repository-required checks; an observed failure blocks the commit.
    Let normal commit hooks run; do not disable them. No additional test suite is

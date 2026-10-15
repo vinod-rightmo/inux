@@ -118,7 +118,8 @@ The Go CLI source lives in [tools/ix](tools/ix/).
 directory before replacing the task, then copies both drafts and creates empty
 ticket.md. `ix task --snapshot [PROJECT]` captures task state; pass that token
 with `--expect SNAPSHOT` before the assets argument to reject intervening edits.
-The agent fetches Jira and fills ticket.md; filesystem checks stay inside ix.
+The agent fetches Jira, fills ticket.md, and checks branch and commit naming
+conventions directly. Task filesystem checks and ADF conversion stay inside ix.
 
 ```sh
 (cd tools/ix && go test ./...)
