@@ -1,6 +1,6 @@
 # Set up Inux tools
 
-Target ix release: `0.0.1`. <!-- x-release-please-version -->
+Target ix release: `1.0.0`. <!-- x-release-please-version -->
 
 Resolve private `ix`, `gh`, and `acli` under `<storage>/tools/bin/` (`.exe` on
 Windows); storage defaults to `<user-home>/.inux`. Honor an explicit override.

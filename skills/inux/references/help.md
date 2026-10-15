@@ -5,7 +5,7 @@ Add examples only when asked. No metadata lookup is needed.
 
 <!-- x-release-please-start-version -->
 ```markdown
-Inux v0.0.1 — Vinod Liyanage
+Inux v1.0.0 — Vinod Liyanage
 
 | Command | Purpose |
 |---|---|
