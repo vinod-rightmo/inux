@@ -12,6 +12,8 @@ Inux v0.0.1 — Vinod Liyanage
 | `/inux help` | Show commands. |
 | `/inux setup` | Set up tools and sign in. |
 | `/inux task <id>` | Load a Jira ticket and create task files. |
+| `/inux branch create` | Create and switch to a local task branch. |
+| `/inux commit changes` | Stage intended changes and create a local commit. |
 | `/inux estimate [request]` | Draft, improve, explain, or publish an estimate. |
 | `/inux pr [request]` | Prepare, refine, explain, or publish a PR. |
 

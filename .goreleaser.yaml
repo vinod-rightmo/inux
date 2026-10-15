@@ -34,8 +34,11 @@ archives:
       - src: skills/inux/assets/*
         dst: assets
         strip_parent: true
-      - src: skills/inux/references/*
+      - src: skills/inux/references/*.md
         dst: references
+        strip_parent: true
+      - src: skills/inux/references/pr/*.md
+        dst: references/pr
         strip_parent: true
 
 checksum:

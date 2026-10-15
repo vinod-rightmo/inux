@@ -11,12 +11,12 @@ Branch name:
 
 Implementation Summary:
 
-- Fix / implementation: <what changed, how it works, and resulting behavior>
-- Root cause: <verified cause for a bug, or None>
+- Fix / implementation: <short paragraph: what now happens when the user acts, a brief example when useful, then how the app makes it happen; simple sentences in event order>
+- Root cause: <short paragraph: what the app did before, the missing or incorrect action, and the problem the user saw; simple sentences in event order, or None>
 
 Code Layer Impact:
 
-- Impacted services: <affected services or None>
+- Impacted services: <repository names without owner/organization prefixes, or None>
 - Core modules/sections: <affected modules or sections>
 
 UI Impact:

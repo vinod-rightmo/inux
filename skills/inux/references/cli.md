@@ -29,7 +29,7 @@ or invokes another CLI.
 
 Convention commands accept a caller-supplied [Go regex](https://pkg.go.dev/regexp/syntax).
 Every entire value must match; inputs are not trimmed. ix itself stays policy-neutral.
-For PR work, the skill supplies the team rules in [PR readiness checks](pr.md#readiness-checks),
+For PR work, the skill supplies the team rules in [PR readiness checks](pr/readiness.md#team-conventions),
 including exact active-ticket matching. Only read that reference for Git policy
 work, not for task setup or ADF conversion. The default commit check uses full
 single-line messages; subject-only checks apply only to an explicit subject rule.

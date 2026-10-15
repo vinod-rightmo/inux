@@ -1,6 +1,6 @@
 # Inux
 
-Start Jira tasks, draft estimates, and prepare pull requests from your coding agent.
+Start Jira tasks, create branches, commit changes, and prepare estimates and pull requests from your coding agent.
 
 **Codex & Cursor · macOS, Linux & Windows**
 
@@ -30,12 +30,14 @@ checks authentication, and cleans up its temporary downloads.
 ```text
 /inux task PROJECT-123
 /inux estimate
+/inux branch create
 ```
 
-After implementing and committing your changes, prepare the pull request:
+After implementing your changes, commit and prepare the pull request:
 
 ```text
-/inux pr
+/inux commit changes
+/inux pr target release/2026-10
 ```
 
 ## Commands
@@ -45,8 +47,15 @@ After implementing and committing your changes, prepare the pull request:
 | `/inux help` | Show the available commands. |
 | `/inux setup` | Set up tools and check sign-in. |
 | `/inux task <id>` | Load a Jira ticket and create the task files. |
+| `/inux branch create` | Create and switch to a local task branch. |
+| `/inux commit changes` | Stage intended changes and create a local commit. |
 | `/inux estimate [request]` | Draft, improve, or explain an estimate. |
 | `/inux pr [request]` | Prepare a PR draft, refine it, or explain it. |
+
+Branch creation starts at current HEAD unless you supply another starting ref.
+Both Git actions stay local and follow the target repository's conventions.
+They reuse task context and verification without running PR readiness checks.
+Commit scope must be clear; unrelated changes are preserved.
 
 Use plain language to refine your drafts:
 
@@ -55,6 +64,17 @@ Use plain language to refine your drafts:
 /inux pr improve the title
 /inux pr improve the description
 ```
+
+Provide the PR destination branch when preparing or publishing:
+
+```text
+/inux pr target release/2026-10
+/inux pr publish target release/2026-10
+```
+
+If omitted, the agent asks for it. An explicit choice already supplied in the
+conversation is reused.
+Commit checks use the chosen target branch to exclude inherited history.
 
 ## Your task files
 

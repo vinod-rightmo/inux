@@ -1,6 +1,6 @@
 ---
 name: inux
-description: Set up Inux tools, start Jira tasks, and draft or refine estimates and pull requests. Use for /inux commands and equivalent requests; publish only when explicitly requested.
+description: Set up Inux tools, start Jira tasks, create branches, commit changes, and draft or refine estimates and pull requests. Use for /inux commands and equivalent requests; publish only when explicitly requested.
 metadata:
   author: "Vinod Liyanage"
   version: "0.0.1" # x-release-please-version
@@ -21,11 +21,16 @@ Ask only when intent is unclear. Help and setup need no project or ticket.
 | `/inux help` | [help.md](references/help.md) |
 | `/inux setup` | [setup.md](references/setup.md) |
 | `/inux task <id>` | [task.md](references/task.md) |
+| `/inux branch create` | [branch.md](references/branch.md) |
+| `/inux commit changes` | [commit.md](references/commit.md) |
 | `/inux estimate [request]` | [estimate.md](references/estimate.md) |
 | `/inux pr [request]` | [pr.md](references/pr.md) |
 
-For task/estimate/PR work, use the explicit project or current project's ordinary
-checkout root. Keep one flat `.inux/` with ticket.md, estimate.md, and pr.md;
+For project work, use the explicit project or current checkout root.
+Branch/commit actions need no drafts or remote access; use known task context,
+reading the ticket header only when needed.
+
+Keep one flat `.inux/` with ticket.md, estimate.md, and pr.md;
 the technical summary belongs in pr.md's Description. Only task initializes it.
 For estimate/PR actions, require the ticket and selected draft. Read the active
 ID from ticket.md's first heading; stop on a supplied-ID mismatch and recheck
@@ -34,9 +39,11 @@ before saving/publishing. Report missing files without resetting the task.
 Private tools live in `<storage>/tools/bin/` (`.exe` on Windows); storage defaults
 to `<user-home>/.inux`. Honor an explicit storage override. Invoke gh/acli by
 absolute private paths and Git directly. [task.md](references/task.md) covers
-`ix task` and ticket formatting. For estimate/PR ADF or convention checks, read
-[cli.md](references/cli.md). Outside setup, report missing required tools; do not
-install, log in, or check tools the action does not use.
+`ix task` and ticket formatting. Branch, commit, and PR references include their
+own convention checks; do not load PR guidance for local Git actions.
+Read [cli.md](references/cli.md) for ADF conversion or direct CLI usage.
+Outside setup, invoke required tools directly and report missing tools; do not
+install, log in, or probe versions.
 
 For Jira network calls, always request execution outside the sandbox on the
 first attempt through host approval. In Cursor Shell, include
