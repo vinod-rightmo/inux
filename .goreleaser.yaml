@@ -37,6 +37,18 @@ archives:
       - src: skills/inux/references/*.md
         dst: references
         strip_parent: true
+      - src: skills/inux/flows/*.flow
+        dst: flows
+        strip_parent: true
+      - src: skills/inux/flows/estimate/*.flow
+        dst: flows/estimate
+        strip_parent: true
+      - src: skills/inux/flows/pr/*.flow
+        dst: flows/pr
+        strip_parent: true
+      - src: skills/inux/flows/ts/*.flow
+        dst: flows/ts
+        strip_parent: true
 
 checksum:
   name_template: checksums.txt

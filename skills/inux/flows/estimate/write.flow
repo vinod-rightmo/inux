@@ -1,0 +1,76 @@
+CHECK mode is one of "generate", "improve".
+
+SET write_draft = FALSE
+
+IF mode == "generate":
+    DO Read ../../references/be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
+        code walkthrough, and 1–2 Overall Reason sentences on main effort/risk (usually under 40
+        words).
+
+    DO Search affected flow once; read relevant code/coverage together. Use initialized structure,
+        not template asset; no tests.
+
+    DO Read team scoring guidance once; otherwise use nonnegative integers: 0 = no meaningful work,
+        1–3 = increasing complexity.
+
+    DO Confirm expected behavior before choosing fixes; record Boolean scope_is_ambiguous for
+        scope-changing ambiguity.
+
+    IF scope_is_ambiguous == TRUE:
+        DO Clarify scope from relevant Jira comments/attachments. Request outside-sandbox execution
+            on first call (Cursor required_permissions: ["all"]); stop if denied/unavailable.
+
+    DO Assess scope/effort/material risks; further searches must affect the estimate. Record Boolean
+        estimate_is_blocked and missing information.
+
+    IF estimate_is_blocked == TRUE:
+        ASK "What is the missing scope or behavior needed for this estimate?" AS clarification
+
+        DO Apply clarification to scope; update Boolean estimate_is_blocked and retain unresolved
+            assumptions.
+
+        CHECK estimate_is_blocked == FALSE
+
+    DO Fill in-memory draft for the requested end state, including completed work; preserve
+        supported developer decisions, six rows/order/fields/Markdown. Keep fixes conditional,
+        assumptions in Risk & Unknowns, reasons in-category, zeros explained, and no
+        double-counting.
+
+    CHECK draft has complete fields, no placeholders/unsupported claims, scores following team scale
+        or fallback, Total Complexity Score = six-score sum, and supported numeric Final Estimate
+        ending in SP; no invented score-to-SP formula.
+
+    SET write_draft = TRUE
+
+IF mode == "improve":
+    DO Read ../../references/be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
+        code walkthrough, and 1–2 Overall Reason sentences on main effort/risk (usually under 40
+        words).
+
+    DO Refine requested parts into in-memory draft, preserving supported decisions/layout and
+        wording-only scores/scope/SP. Inspect evidence only as needed; no code investigation/Jira
+        retrieval for wording edits or tests. Change SP only if breakdown/evidenced conventions do
+        not support it; explain why.
+
+    CHECK Changed fields/dependent totals are complete and supported: six rows/order/fields
+        preserved, nonnegative integer team scores (fallback 0 = no work, 1–3 = increasing
+        complexity), zeros explained, reasons in-category, uncertainty in Risk & Unknowns, no
+        double-counting, correct score sum, and numeric supported Final Estimate ending in SP
+        without invented formulas. Leave unrelated fields unchanged.
+
+    DO Retain unrelated incomplete fields for the reply.
+
+    SET write_draft = TRUE
+
+IF write_draft == TRUE:
+    DO Recheck ticket.md's active ID as current_ticket_id.
+
+    CHECK current_ticket_id == ticket_id
+
+    DO Save draft only to estimate_path.
+
+    DO Verify the saved file once against draft.
+
+PRINT with ticket_id, SP, file/verified URL, assumptions, unrelated gaps, justified SP changes, and
+    requested explanation; brief unless asked. Preserve task files on publish; inspect remote state
+    before uncertain-write retries.

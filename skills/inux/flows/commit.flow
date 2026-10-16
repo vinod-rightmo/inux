@@ -1,0 +1,50 @@
+DO Resolve absolute project. Read branch/HEAD, status, and Git operation state; record Boolean
+    changes_present.
+
+CHECK HEAD is attached, with no conflicts or active merge/rebase/cherry-pick/revert.
+
+IF changes_present == FALSE:
+    STOP "There are no changes to commit."
+
+DO Read .inux/ticket.md in full; extract ticket_id from its first heading.
+
+CHECK ticket_id is valid, any supplied ID matches, and the branch contains the exact case-sensitive
+    ticket token, not part of a longer ID; otherwise abort before staging.
+
+DO Read complete staged/unstaged diffs and relevant untracked files. Understand what changed and why
+    using ticket/code context. Select requested or clear ticket changes; record scope.clear.
+
+IF scope is not clear:
+    ASK "Which changes should be committed, including already staged changes?" AS scope_input
+
+    DO Resolve scope from scope_input; update scope.clear.
+
+CHECK scope is clear; no unrelated staged changes or unintended secrets/artifacts enter a commit.
+
+DO Group changes by purpose: one commit for related changes, multiple for independent purposes,
+    dependencies first. Record ordered groups and commit_count; draft each message from its diff.
+
+CHECK Each message is one line <TICKET-ID>: <Capitalized present-tense summary>, with the exact
+    active ID once, colon plus one space, and no body or extra prefixes.
+
+DO Run missing repository-required verification; reuse results for unchanged content, keeping hooks.
+
+CHECK Required verification passed.
+
+REPEAT commit_count TIMES:
+    DO Select next group and message; recheck ticket ID and branch.
+
+    CHECK Ticket and branch still match the reviewed task.
+
+    DO Stage only this group's paths/hunks; preserve partial staging and unrelated work/index.
+        Abort if safe separation is impossible.
+
+    SHELL `git -C {project} diff --cached --check` AS staged_check
+
+    CHECK Full staged diff is nonempty, exactly the reviewed group, verified, and matches message.
+
+    SHELL `git -C {project} commit -m {message}` AS commit_result
+
+    DO Record SHA, full message, and remaining status; advance to next group.
+
+PRINT with committed SHAs/messages and remaining changes; on failure include any completed commits.

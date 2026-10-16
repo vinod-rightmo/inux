@@ -1,0 +1,28 @@
+DO Using only the user's request after /inux ts or /inux technical summary, set mode to
+    "generate" for creating or summarizing changes, "improve" for editing or refining the saved
+    summary, or "publish" for an explicit publication request. Classify meaning, not exact
+    keywords; create aliases generate and refine aliases improve. Preserve the request for the
+    selected route. Set mode to NULL for missing, unsupported, conflicting, or ambiguous intent.
+    Never infer publication or choose a partial route for multiple requested actions.
+    Do not inspect projects, read task files, or call tools to classify intent.
+
+IF mode == NULL:
+    STOP "Error: cannot classify technical-summary request. Usage: /inux ts [request]. Request generate, improve, or publish; for example: /inux ts summarize these changes."
+
+CHECK mode is one of "generate", "improve", "publish".
+
+DO Resolve absolute project, ticket_path, and summary_path in active .inux. Require ticket.md;
+    allow technical-summary.md to be missing. Never reset the task or synchronize pr.md.
+
+DO Read full ticket.md and existing technical-summary.md together; retain ticket_id,
+    saved_summary (NULL if missing), and Booleans summary_exists and summary_is_empty.
+    Reject a supplied-ID mismatch or an existing summary identifying another ticket.
+
+IF mode == "generate":
+    USE ts/generate.flow
+
+IF mode == "improve":
+    USE ts/improve.flow
+
+IF mode == "publish":
+    USE ts/publish.flow

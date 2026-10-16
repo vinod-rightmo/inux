@@ -1,0 +1,59 @@
+SET temp_dir = NULL
+
+FINALLY:
+    IF temp_dir != NULL:
+        DO Remove this run's ADF output/temp directory only; report cleanup errors.
+
+CHECK mode == "publish"
+
+CHECK The developer explicitly requested publishing this estimate.
+
+CHECK Saved estimate is complete/placeholder-free and supported: six rows/order/fields,
+    nonnegative integer team scores (fallback 0 = no work, 1–3 = increasing complexity), zeros
+    explained, categorized reasons/uncertainty, no double-counting, correct six-score total, and
+    supported numeric Final Estimate ending in SP; no invented formulas. Report missing fields
+    without rewriting.
+
+DO Resolve private absolute acli/ix under shared Inux guidance; report missing tools without
+    setup/login/probes. Use only exact subcommand help when needed.
+
+SHELL `{acli} jira workitem comment list --key {ticket_id} --json --paginate` AS comments_result
+
+SET comments = JSON(stdout of comments_result)
+
+DO Check comments for duplicates/clarifications; record Boolean evidence_contradicts_draft and
+    identical_comment plus duplicate URL. Never replace unrelated comments.
+
+IF evidence_contradicts_draft == TRUE:
+    ASK "Jira evidence contradicts the saved estimate. Would you like to revise it?" AS revision_request
+
+    STOP "Publication stopped because evidence contradicts the draft; the saved estimate is unchanged."
+
+IF identical_comment == FALSE:
+    DO Read ../../references/cli.md for ix ADF conversion; never build ADF manually.
+
+    DO Create unique temp_dir; set absolute adf_path inside it.
+
+    SHELL `{ix} adf {estimate_path} {adf_path}` AS adf_result
+
+    DO Inspect ADF for faithful saved-estimate conversion.
+
+    DO Immediately before posting, recheck ticket ID/content against saved_estimate; record
+        current_ticket_id and Boolean estimate_is_unchanged.
+
+    CHECK current_ticket_id == ticket_id
+
+    CHECK estimate_is_unchanged == TRUE
+
+    SHELL `{acli} jira workitem comment create --key {ticket_id} --body-file {adf_path} --json` AS publish_result
+
+    SET published = JSON(stdout of publish_result)
+
+    DO Retain returned comment/ticket URL from published; look up only if absent.
+
+ELSE:
+    DO Retain identical comment URL/status for the reply; do not post.
+
+PRINT with ticket_id, SP, file/verified URL, assumptions, unrelated gaps, justified SP changes, and
+    requested explanation; brief unless asked. Preserve task files on publish; inspect remote state
+    before uncertain-write retries.

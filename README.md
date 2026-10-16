@@ -12,7 +12,23 @@ You need Node.js, Git, and access to this private GitHub repository.
 
 ```sh
 npx skills add vinod-rightmo/inux --skill inux --global --agent codex cursor
+npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 ```
+
+The Inux command installs the current skill from this repository's default branch
+(`main`), including `flows/`, `references/`, and `assets/`. It does not select the
+latest GitHub release or require an npm package for Inux. Merge skill changes into
+`main` to make them available through the same command. Install Flow separately as
+shown above; Inux requires its interpreter.
+
+To update an existing global Inux installation:
+
+```sh
+npx skills update inux --global
+```
+
+See the [Skills CLI documentation](https://github.com/vercel-labs/skills#readme)
+for installation, updates, and private-repository authentication.
 
 **2. Set up the tools**
 
@@ -29,7 +45,7 @@ checks authentication, and cleans up its temporary downloads.
 
 ```text
 /inux task PROJECT-123
-/inux estimate
+/inux estimate draft an estimate for this task
 /inux branch create
 ```
 
@@ -49,19 +65,26 @@ After implementing your changes, commit and prepare the pull request:
 | `/inux task <id>` | Load a Jira ticket and create the task files. |
 | `/inux branch create` | Create and switch to a local task branch. |
 | `/inux commit changes` | Stage intended changes and create a local commit. |
-| `/inux estimate [request]` | Draft, improve, or explain an estimate. |
-| `/inux technical summary [request]` | Create, refine, or publish `.inux/technical-summary.md` to Jira. |
-| `/inux pr [request]` | Prepare a PR draft, refine it, or explain it. |
+| `/inux estimate [request]` | Draft, improve, explain, or publish an estimate. |
+| `/inux ts [request]` | Generate, improve, or publish a standalone technical summary. |
+| `/inux technical summary [request]` | Alias for `/inux ts [request]`. |
+| `/inux pr [request]` | Prepare, refine, explain, or publish a PR. |
 
 Branch creation starts at current HEAD unless you supply another starting ref.
 Both Git actions stay local and follow the target repository's conventions.
 They reuse task context and verification without running PR readiness checks.
 Commit scope must be clear; unrelated changes are preserved.
 
-Use plain language to refine your drafts:
+Replace `[request]` with a required plain-language request. The agent classifies
+its meaning and selects one route. Missing, unsupported, conflicting, or ambiguous
+requests show a usage error and stop before project inspection. For example,
+`/inux ts explain` fails because technical summaries have no explain route.
+
+Use plain language to select a route:
 
 ```text
 /inux estimate improve the reasons
+/inux ts summarize these changes
 /inux pr improve the title
 /inux pr improve the description
 ```
@@ -88,7 +111,8 @@ Each task starts with three files in your project:
 └── pr.md         PR title and description
 ```
 
-Run `/inux technical summary` to create an optional `.inux/technical-summary.md`.
+Run `/inux ts generate` (or `/inux ts create`) to create an optional `.inux/technical-summary.md`.
+Use `/inux ts improve` to refine it; `/inux technical summary` remains an alias.
 It uses the same summary instructions as the PR description. Each command edits
 its own file. You can edit the drafts directly or ask the agent to refine them.
 
@@ -101,7 +125,7 @@ Drafting and refining stay local. Publishing requires an explicit request:
 
 ```text
 /inux estimate publish
-/inux technical summary publish
+/inux ts publish
 /inux pr publish
 ```
 
@@ -117,6 +141,8 @@ To try the normal actions without publishing, add **“do not publish”** to yo
 ### Local checks
 
 The skill instructions live in [skills/inux](skills/inux/SKILL.md).
+Executable workflows live in `skills/inux/flows/`, with action subfolders;
+`skills/inux/references/` contains only Markdown guidance.
 The Go CLI source lives in [tools/ix](tools/ix/).
 `ix task TEMPLATES_DIR [PROJECT]` reads estimate.md and pr.md from the assets
 directory before replacing the task, then copies both drafts and creates empty
