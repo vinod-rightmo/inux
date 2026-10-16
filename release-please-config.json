@@ -14,11 +14,11 @@
         },
         {
           "type": "generic",
-          "path": "skills/inux/references/help.flow"
+          "path": "skills/inux/flows/help.flow"
         },
         {
           "type": "generic",
-          "path": "skills/inux/references/setup.flow"
+          "path": "skills/inux/flows/setup.flow"
         }
       ]
     }

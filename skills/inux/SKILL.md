@@ -17,37 +17,38 @@ If either file is missing or unreadable, stop and show Flow's installation comma
 npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 ```
 
-For `/inux help`, execute [help.flow](references/help.flow). Help needs no
+Executable programs live in `flows/`; `references/` contains Markdown guidance only.
+
+For `/inux help`, execute [help.flow](flows/help.flow). Help needs no
 project inspection or tool checks.
 
 Infer the action from plain language. Load only its selected program or reference,
 required shared guidance, and USE children when reached. Reuse instructions already
 provided in this conversation; reread only when changed or incomplete.
-Ask only when intent is unclear. Help and setup need no project or ticket.
+For estimate, ts, and pr, classify the request in the selected entry flow before
+project inspection. A missing, unsupported, conflicting, or ambiguous request
+shows a usage error and stops; never guess an action or ask the user to choose a
+route. Other commands may ask when intent is unclear. Help and setup need no
+project or ticket.
 
 | Request | Program or reference |
 |---|---|
-| `/inux help` | [help.flow](references/help.flow) |
-| `/inux setup` | [setup.flow](references/setup.flow) |
-| `/inux task <id>` | [task.flow](references/task.flow) |
-| `/inux branch create` | [branch.flow](references/branch.flow) |
-| `/inux commit changes` | [commit.flow](references/commit.flow) |
-| `/inux estimate`: bare, generate, or improve | [estimate.flow](references/estimate.flow) |
-| `/inux estimate explain` | [estimate.flow](references/estimate.flow) |
-| `/inux estimate publish`: explicit publication | [estimate.flow](references/estimate.flow) |
-| `/inux estimate`: unclear action or requested full workflow | [estimate.flow](references/estimate.flow) |
-| `/inux ts generate` (or `ts create`) | [ts.flow](references/ts.flow) |
-| `/inux ts improve [request]` | [ts.flow](references/ts.flow) |
-| `/inux ts publish`: explicit publication | [ts.flow](references/ts.flow) |
-| `/inux ts` or `/inux technical summary [request]`: aliases | [ts.flow](references/ts.flow) |
-| `/inux pr`: bare or prepare, including target selection | [pr.flow](references/pr.flow) |
-| `/inux pr refine`: Title or Description | [pr.flow](references/pr.flow) |
-| `/inux pr explain` | [pr.flow](references/pr.flow) |
-| `/inux pr publish`: explicit publication | [pr.flow](references/pr.flow) |
-| `/inux pr`: unclear action or requested full workflow | [pr.flow](references/pr.flow) |
+| `/inux help` | [help.flow](flows/help.flow) |
+| `/inux setup` | [setup.flow](flows/setup.flow) |
+| `/inux task <id>` | [task.flow](flows/task.flow) |
+| `/inux branch create` | [branch.flow](flows/branch.flow) |
+| `/inux commit changes` | [commit.flow](flows/commit.flow) |
+| `/inux estimate [request]` | [estimate.flow](flows/estimate.flow): generate, improve, explain, or publish |
+| `/inux ts [request]` | [ts.flow](flows/ts.flow): generate, improve, or publish |
+| `/inux technical summary [request]` | Alias for `/inux ts [request]` |
+| `/inux pr [request]` | [pr.flow](flows/pr.flow): prepare, refine, explain, or publish |
 
-Estimate writing generates empty templates and improves existing drafts.
-Unclear actions use the entry flow's clarification step.
+`[request]` is required plain language, not a fixed subcommand. For example,
+`/inux estimate improve the reasons`, `/inux ts summarize these changes`, and
+`/inux pr improve the title` select their matching routes. Publication requires
+explicit intent. A successfully classified route may still ask for missing task
+inputs, such as a PR target branch. Estimate writing generates empty templates
+and improves existing drafts.
 
 For project work, use the explicit project or current checkout root.
 Branch/commit actions need no drafts. Branch creation pulls the parent branch and may use known
@@ -64,7 +65,7 @@ before saving/publishing. Report missing files without resetting the task.
 
 Private tools live in `<storage>/tools/bin/` (`.exe` on Windows); storage defaults
 to `<user-home>/.inux`. Honor an explicit storage override. Invoke gh/acli by
-absolute private paths and Git directly. [task.flow](references/task.flow) covers
+absolute private paths and Git directly. [task.flow](flows/task.flow) covers
 `ix task` and ticket formatting. The agent checks branch and commit conventions
 directly using the applicable action reference; no ix validator or generated
 validation script is needed. Do not load PR guidance for local Git actions.

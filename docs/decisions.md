@@ -22,7 +22,7 @@ sudo, and links to externally managed binaries are excluded from this workflow.
 across machines and operating systems, avoids global package-manager changes,
 and keeps the tools used by the skill independent of unrelated PATH versions.
 
-**Changed files:** [setup reference](../skills/inux/references/setup.flow) and
+**Changed files:** [setup reference](../skills/inux/flows/setup.flow) and
 [skill entry point](../skills/inux/SKILL.md). The correction applies to local
 Codex and Cursor installations as well as the repository source. It does not
 change the CLI commands or require a new tool download when a private copy works.

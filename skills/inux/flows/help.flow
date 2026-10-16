@@ -10,11 +10,16 @@ PRINT
     | `/inux branch create` | Create and switch to a local task branch. |
     | `/inux commit changes` | Stage intended changes and create a local commit. |
     | `/inux estimate [request]` | Draft, improve, explain, or publish an estimate. |
-    | `/inux ts generate` (or `ts create`) | Generate a standalone technical summary. |
-    | `/inux ts improve [request]` | Improve the saved technical summary. |
-    | `/inux ts publish` | Publish the saved technical summary to Jira. |
-    | `/inux technical summary [request]` | Alias for the technical-summary actions. |
+    | `/inux ts [request]` | Generate, improve, or publish a standalone technical summary. |
+    | `/inux technical summary [request]` | Alias for `/inux ts [request]`. |
     | `/inux pr [request]` | Prepare, refine, explain, or publish a PR. |
+
+    Replace `[request]` with what you want the agent to do. A request is required.
+    The agent selects the matching route from plain language. If the request is missing,
+    unsupported, conflicting, or ambiguous, it shows a usage error and stops.
+
+    Examples: `/inux estimate improve the reasons`, `/inux ts summarize these changes`,
+    `/inux pr improve the title`.
 
     Publishing requires an explicit `/inux estimate publish`,
     `/inux ts publish` (or `/inux technical summary publish`), or `/inux pr publish` request.

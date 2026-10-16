@@ -3,7 +3,7 @@ CHECK mode is one of "generate", "improve".
 SET write_draft = FALSE
 
 IF mode == "generate":
-    DO Read ../be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
+    DO Read ../../references/be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
         code walkthrough, and 1–2 Overall Reason sentences on main effort/risk (usually under 40
         words).
 
@@ -43,7 +43,7 @@ IF mode == "generate":
     SET write_draft = TRUE
 
 IF mode == "improve":
-    DO Read ../be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
+    DO Read ../../references/be-human.md once for writing; use one plain reason sentence (usually 10–20 words), no
         code walkthrough, and 1–2 Overall Reason sentences on main effort/risk (usually under 40
         words).
 

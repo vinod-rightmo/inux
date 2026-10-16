@@ -1,4 +1,12 @@
-CHECK mode == "prepare"
+SET temp_dir = NULL
+
+FINALLY:
+    IF temp_dir != NULL:
+        DO Remove this run's UTF-8 body file/temp directory only; report cleanup errors.
+
+CHECK mode == "publish"
+
+CHECK The developer explicitly requested publishing this PR.
 
 PRINT
     - [ ] Git validation
@@ -65,18 +73,17 @@ PRINT
     - [ ] Save/publication
 DO Read full ticket.md/pr.md together; retain exact saved_pr.
 
+CHECK saved_pr has matching ticket, complete single-line Title, and placeholder-free
+    Description satisfying ../../references/technical-summary.md#summary-content. Request
+    preparation/refinement if incomplete; never draft here.
+
 DO Review full merge-base-to-checked_head diff/code read-only; verify message accuracy. For
     material gaps, name the missing fact, follow exact imports/symbols into direct dependencies,
     and read relevant ranges. Stop once claims are supported; intent/messages are not
     implementation proof. Retain evidence.
 
-DO Read ../be-human.md once and ../technical-summary.md#summary-content for writing; never run
-    standalone summary actions.
-
-DO Compose in-memory draft from code evidence, preserving accurate developer
-    notes/labels/order and required Description sections. Title: one concise <TICKET-ID>:
-    <Capitalized action summary> line unless overridden. Description follows Summary
-    content; read ../../assets/pr.md only for missing labels.
+CHECK Saved summary/messages agree with full diff/evidence; report stale content without
+    edits.
 
 DO Run missing project checks for current code/inputs, reusing unchanged observed results; one
     targeted manifest/Makefile lookup if needed. Probe runtime health only on actual failure;
@@ -90,6 +97,27 @@ PRINT
     - [x] Git validation
     - [x] Evidence/verification
     - [ ] Save/publication
+DO Resolve private absolute gh; report missing tools without setup/login/version probes.
+
+SHELL `{gh} auth status` AS authentication
+
+DO With private gh --repo repository, inspect exact repository/head open PRs; record Boolean
+    pr_choice_is_clear, existing_pr or NULL, and authenticated_user. Clarify differing
+    targets before mutation.
+
+IF pr_choice_is_clear == FALSE:
+    ASK "Clarify the existing PR to update and any differing target before publication:" AS pr_choice
+
+    DO Resolve existing_pr/explicit target from pr_choice; update pr_choice_is_clear and
+        revalidate affected gate/diff/checks.
+
+CHECK pr_choice_is_clear == TRUE
+
+DO Extract title and description only from saved_pr; preserve Description Markdown exactly.
+
+DO Track unique temp_dir before writing absolute UTF-8 body_file containing only
+    description.
+
 DO Immediately before save/publish, recheck branch/HEAD/TARGET_REF revision/ticket/operation
     state/full index/tree; compare saved_pr on publish. Revalidate only changed dependencies and
     update retained evidence/checked_head.
@@ -97,8 +125,34 @@ DO Immediately before save/publish, recheck branch/HEAD/TARGET_REF revision/tick
 CHECK Current state matches verified gate/diff/implementation/checks; active ticket matches
     ticket_id, HEAD attached, tree clean, no active operation.
 
-DO Save draft only to pr_path; successful write finishes prepare, without readback/byte
-    audit or push/publication.
+CHECK Draft equals saved_pr and remains valid for checked state/explicit target.
+
+DO Push current_branch to push_remote without force, using separate literal arguments.
+
+DO Read pushed branch SHA as remote_head.
+
+CHECK remote_head == checked_head
+
+IF existing_pr == NULL:
+    SHELL `{gh} pr create --repo {repository} --base {target} --head {current_branch} --draft --assignee {authenticated_user} --title {title} --body-file {body_file}` AS creation
+
+    SET pr_url = trim(stdout of creation)
+
+ELSE:
+    DO Edit existing_pr with private gh: explicit --repo repository, selected base, title,
+        body_file, --add-assignee authenticated_user; preserve other assignees/reviewers/PR
+        state.
+
+    DO Retain existing_pr URL as pr_url before review request for partial-success reporting.
+
+SHELL `{gh} pr edit {pr_url} --repo {repository} --add-reviewer "@copilot"` AS reviewer_result
+
+DO Inspect PR assignees/Copilot review evidence; retain verified URL, publication state, and
+    partial success.
+
+CHECK authenticated_user assigned; Copilot review request accepted or already recorded.
+
+DO Attach verified PR URL to this chat when supported.
 
 PRINT
     - [x] Git validation

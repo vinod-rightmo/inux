@@ -11,7 +11,7 @@ CHECK The developer explicitly requested publishing this technical summary.
 CHECK summary_exists == TRUE
 
 CHECK saved_summary has a matching ticket ID and completed Summary content fields from
-    ../technical-summary.md#summary-content, without placeholders or unsupported claims.
+    ../../references/technical-summary.md#summary-content, without placeholders or unsupported claims.
     Report missing/incomplete content without creating or rewriting the draft.
 
 DO Resolve private absolute acli/ix under shared Inux guidance; report missing tools without
@@ -32,7 +32,7 @@ IF evidence_contradicts_summary == TRUE:
     STOP "Publication stopped because evidence contradicts the draft; the saved summary is unchanged."
 
 IF identical_comment == FALSE:
-    DO Read ../cli.md for ix ADF conversion; never build ADF manually.
+    DO Read ../../references/cli.md for ix ADF conversion; never build ADF manually.
 
     DO Create unique temp_dir; set absolute adf_path inside it.
 

@@ -5,7 +5,7 @@ DO Read ticket.md/pr.md together; retain exact saved_pr and preserve unrequested
 DO Check branch/HEAD before reusing implementation evidence; inspect committed changes only for
     material gaps and reuse other verified evidence. No target/fetch/readiness pass.
 
-DO Read ../be-human.md; for Description use ../technical-summary.md#summary-content without
+DO Read ../../references/be-human.md; for Description use ../../references/technical-summary.md#summary-content without
     standalone actions.
 
 DO Explain saved_pr using verified evidence without writes; distinguish prior

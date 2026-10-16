@@ -4,11 +4,13 @@ Use Summary content below for both `.inux/technical-summary.md` and the
 Description in `.inux/pr.md`. For writing, read [writing guidance](be-human.md) once.
 PR actions use the matching program in [Inux routing](../SKILL.md).
 
-For `/inux ts generate`, `/inux ts improve`, or `/inux ts publish`, execute
-[ts.flow](ts.flow), which USEs the selected mode file. `ts create` aliases `ts generate`;
-`/inux technical summary [request]` remains an alias.
-Bare requests generate missing/empty summaries and otherwise improve them.
-Publication requires explicit intent. Do not automatically synchronize the files.
+For `/inux ts [request]` or its alias `/inux technical summary [request]`, execute
+[ts.flow](../flows/ts.flow), which classifies the required plain-language request and USEs
+one selected route: generate (including create), improve (including refine), or publish.
+For example, `/inux ts summarize these changes` selects generate. Missing,
+unsupported, conflicting, or ambiguous requests stop with a usage error before
+project inspection. Publication requires explicit intent. Do not automatically
+synchronize the files.
 
 ## Summary content
 

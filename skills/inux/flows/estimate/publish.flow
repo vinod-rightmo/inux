@@ -30,7 +30,7 @@ IF evidence_contradicts_draft == TRUE:
     STOP "Publication stopped because evidence contradicts the draft; the saved estimate is unchanged."
 
 IF identical_comment == FALSE:
-    DO Read ../cli.md for ix ADF conversion; never build ADF manually.
+    DO Read ../../references/cli.md for ix ADF conversion; never build ADF manually.
 
     DO Create unique temp_dir; set absolute adf_path inside it.
 

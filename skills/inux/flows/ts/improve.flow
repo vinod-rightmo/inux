@@ -1,6 +1,8 @@
-CHECK mode == "generate"
+CHECK mode == "improve"
 
-DO Read ../be-human.md once and ../technical-summary.md#summary-content for writing.
+CHECK summary_exists == TRUE
+
+DO Read ../../references/be-human.md once and ../../references/technical-summary.md#summary-content for writing.
 
 DO Inspect branch/HEAD before reusing earlier code evidence. Resolve the requested
     implementation scope; retain Boolean scope_is_clear. Wording edits need no code
@@ -19,10 +21,8 @@ DO Review relevant local changes or the explicitly identified commit range withi
     gate, commits, or tests solely to write prose. Distinguish observed checks from proposed
     verification and report incomplete implementation honestly.
 
-DO Prepare in-memory draft using the shared Summary content rules. For a new file, use
-    a # TICKET-ID heading followed by the Description body from ../../assets/pr.md, without the PR
-    title or Description heading. For existing files, preserve layout, accurate developer notes,
-    and unrequested content; generate must not reset an existing summary.
+DO Refine requested parts into in-memory draft using the shared Summary content rules.
+    Preserve the existing layout, accurate developer notes, judgments, and unrequested content.
 
 CHECK Requested content in draft is supported and complete, with no placeholders in changed
     fields. Preserve accurate developer judgments and report unrelated incomplete fields.
