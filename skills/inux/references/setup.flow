@@ -1,5 +1,5 @@
 # x-release-please-start-version
-SET target = "0.0.1"
+SET target = "1.0.0"
 # x-release-please-end
 
 SET temp = NULL
