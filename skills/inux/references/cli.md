@@ -17,7 +17,7 @@ release builds use the same version as the skill, local unversioned builds use d
 For `task`, pass the skill assets directory; ix reads both estimate.md and
 pr.md before replacement, copies both drafts, and creates empty ticket.md.
 `--snapshot` returns an opaque state token without writes; `--expect` rejects
-changes before replacement. Follow [task.md](task.md) for the complete workflow
+changes before replacement. Follow [task.flow](task.flow) for the complete workflow
 and Git exclusion. The agent passes an absolute PROJECT;
 direct CLI use may omit it to use the current directory. ix never fetches Jira
 or invokes another CLI.
@@ -32,5 +32,5 @@ File operations and conversion-to-file report JSON on stdout. Errors are JSON
 on stderr with exit status 1; never assume success from partial output. No stdin,
 selective reset, task history, install/update service, or publishing wrappers.
 The skill package contains instructions and templates, without executables. If ix is missing or cannot run,
-follow [setup.md](setup.md) when setup is requested; otherwise report that setup
+follow [setup.flow](setup.flow) when setup is requested; otherwise report that setup
 is needed. Do not silently use a PATH binary or another platform's executable.

@@ -22,47 +22,42 @@ Node.js must already be available as `node`. Each process has the language's
 ## Flow: Review three commit subjects
 
 ```flow
-RUN `node --version` AS runtime
+SHELL `node --version` AS runtime
 SET reviewed = 0
 SET accepted = 0
 SET max_length = 72
 
-REPEAT 3 TIMES
+REPEAT 3 TIMES:
     ASK "Enter a commit subject, or type cancel to stop:" AS message
 
-    IF message == "cancel"
+    IF message == "cancel":
         STOP "Commit review cancelled."
-    END IF
 
     CHECK message is not empty
 
     RUN "check-commit-subject.js" using Node.js AS validation
 
-    SET review = json(stdout of validation)
+    SET review = JSON(stdout of validation)
     SET reviewed = reviewed + 1
 
-    IF review is valid
+    IF review is valid:
         SET accepted = accepted + 1
         DO Print "Accepted." in the terminal.
-    ELSE
+    ELSE:
         DO Print reason of review in the terminal.
-        THINK AS advice
+        THINK AS advice:
             Using message, reason of review, and the sample policy, suggest how to improve the subject.
             Keep the suggestion brief and do not invent details about the change.
-        END THINK
         DO Print advice in the terminal.
-    END IF
-END REPEAT
 
 CHECK reviewed == 3
 
-IF accepted == 3
+IF accepted == 3:
     DO Print "All three subjects passed." in the terminal.
-ELSE
+ELSE:
     DO Print "Some subjects need revision." in the terminal.
-END IF
 
-END with reviewed and accepted counts.
+PRINT with reviewed and accepted counts.
 ```
 
 ## Try these inputs

@@ -1,0 +1,47 @@
+DO Resolve absolute project and user/repository conventions, including prefixes; set start_ref to
+    the explicit parent branch or NULL (current branch). Never infer from PR target or substitute
+    a missing parent.
+
+DO Batch branch/HEAD, porcelain status, and operation-state reads.
+
+CHECK No unresolved conflicts or active merge/rebase/cherry-pick/revert.
+
+DO Use the supplied name or derive a concise task name under user/repository naming rules; otherwise
+    use <type>/<TICKET-ID>-<lowercase-kebab-description>, with the exact uppercase active ticket,
+    type feature/bugfix/hotfix/chore/refactor/perf/test/release, and 1–6 lowercase letter/digit
+    description words separated by single hyphens. Count description words only.
+    Bug → bugfix; Story/new capability → feature. Read only .inux/ticket.md heading/Type/Summary
+    if needed. Record Boolean naming_ready; set name = NULL and explain missing facts if incomplete.
+
+IF naming_ready == FALSE:
+    ASK "Provide the missing branch name or task facts:" AS naming_input
+
+    DO Complete name from naming_input/task under the same naming rules; update naming_ready.
+
+CHECK naming_ready == TRUE
+
+DO Set parent_branch to start_ref, or the current branch when start_ref is NULL. Preserve
+    uncommitted changes; do not stash, reset, or discard them.
+
+CHECK parent_branch is an existing local branch with a configured upstream.
+
+SHELL `git -C {project} switch {parent_branch}`
+
+SHELL `git -C {project} -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only`
+
+DO Compare name against local branches and known remote-tracking branches (without their remote
+    prefix), without fetching; record Boolean branch_exists.
+
+IF branch_exists == TRUE:
+    DO Choose the first unused suffix -2, -3, and so on; update name, preserving required
+        prefix/ticket and shortening the description if needed to retain naming limits.
+        Always create a new task branch; never reuse or reset an existing task branch, including
+        after a creation failure.
+
+CHECK name is unused among local and known remote-tracking branches, follows applicable naming rules
+    and required validators, and any supplied ticket matches the active ticket. No ix/generated
+    validator.
+
+SHELL `git -C {project} switch -c {name}` AS creation
+
+PRINT with name and successful git switch result, briefly; no reinspection.

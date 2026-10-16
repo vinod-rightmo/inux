@@ -1,0 +1,27 @@
+DO Resolve absolute project, ticket_path, and summary_path in active .inux. Require ticket.md;
+    allow technical-summary.md to be missing. Never reset the task or synchronize pr.md.
+
+DO Read full ticket.md and existing technical-summary.md together; retain ticket_id,
+    saved_summary (NULL if missing), and Booleans summary_exists and summary_is_empty.
+    Reject a supplied-ID mismatch or an existing summary identifying another ticket.
+
+DO Set mode to "generate", "improve", or "publish" from the request. Accept /inux ts and
+    /inux technical summary as aliases, create as generate, and refine as improve. Bare requests
+    generate missing/empty summaries and otherwise improve them. Unclear intent gives NULL;
+    never infer publication.
+
+IF mode == NULL:
+    ASK "Which technical-summary action do you want: generate, improve, or publish?" AS clarified_request
+
+    DO Resolve mode from clarified_request and the original request; never infer publication.
+
+CHECK mode is one of "generate", "improve", "publish".
+
+IF mode == "generate":
+    USE ts/generate.flow
+
+IF mode == "improve":
+    USE ts/improve.flow
+
+IF mode == "publish":
+    USE ts/publish.flow

@@ -1,0 +1,61 @@
+DO Resolve ticket_id, absolute project, private absolute ix/acli, and absolute assets under shared
+    Inux guidance from ../assets
+    beside this program. Let ix own directory/template validation, snapshots, and initialization
+    (plain directories supported; linked Git worktrees unsupported). No separate inspections,
+    listings/hashes, template reads/copies, or CLI/PR/conversion lookup; keep local steps quiet.
+
+SHELL `{ix} task --snapshot {project}` AS snapshot_result
+
+SET state = JSON(stdout of snapshot_result)
+
+CHECK state is ok
+
+SET snapshot = snapshot of state
+
+SHELL `{acli} jira workitem view {ticket_id} --fields key,issuetype,summary,status,assignee,description,attachment --json` AS jira_result
+
+SET ticket = JSON(stdout of jira_result)
+
+CHECK key of ticket == ticket_id
+
+CHECK Requested ticket details are complete.
+
+SET ticket_layout = """
+# TICKET-ID
+
+Type: <type>
+Summary: <summary>
+Status: <status>
+Assignee: <assignee or None>
+
+## Description
+
+<full description or None>
+
+## Criteria
+
+<explicit criteria or None>
+
+## Attachments
+
+- <filename> — <URL>
+"""
+
+DO Prepare ticket_markdown in memory from ticket using ticket_layout: preserve full
+    descriptions/lists/tables and media links with supplied names/URLs. Keep unresolved references,
+    invent no mappings/criteria, and use None for absent values/attachments. Write nothing yet.
+
+SHELL `{ix} task --expect {snapshot} {assets} {project}` AS workspace_result
+
+SET workspace = JSON(stdout of workspace_result)
+
+CHECK workspace is ok
+
+CHECK files of workspace lists ticket.md, estimate.md, and pr.md.
+
+SET directory = directory of workspace
+
+DO Write ticket_markdown to returned directory's empty ticket.md. CLI replacement plus write finish
+    the action; preserve Git exclusions/.gitignore, without copies/readback/final filesystem checks.
+
+PRINT with ticket_id and three absolute file paths, briefly.

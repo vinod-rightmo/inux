@@ -12,6 +12,7 @@ You need Node.js, Git, and access to this private GitHub repository.
 
 ```sh
 npx skills add vinod-rightmo/inux --skill inux --global --agent codex cursor
+npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 ```
 
 **2. Set up the tools**
@@ -50,7 +51,10 @@ After implementing your changes, commit and prepare the pull request:
 | `/inux branch create` | Create and switch to a local task branch. |
 | `/inux commit changes` | Stage intended changes and create a local commit. |
 | `/inux estimate [request]` | Draft, improve, or explain an estimate. |
-| `/inux technical summary [request]` | Create, refine, or publish `.inux/technical-summary.md` to Jira. |
+| `/inux ts generate` (or `ts create`) | Generate `.inux/technical-summary.md`. |
+| `/inux ts improve [request]` | Improve the saved technical summary. |
+| `/inux ts publish` | Publish the saved technical summary to Jira. |
+| `/inux technical summary [request]` | Alias for the technical-summary actions. |
 | `/inux pr [request]` | Prepare a PR draft, refine it, or explain it. |
 
 Branch creation starts at current HEAD unless you supply another starting ref.
@@ -88,7 +92,8 @@ Each task starts with three files in your project:
 └── pr.md         PR title and description
 ```
 
-Run `/inux technical summary` to create an optional `.inux/technical-summary.md`.
+Run `/inux ts generate` (or `/inux ts create`) to create an optional `.inux/technical-summary.md`.
+Use `/inux ts improve` to refine it; `/inux technical summary` remains an alias.
 It uses the same summary instructions as the PR description. Each command edits
 its own file. You can edit the drafts directly or ask the agent to refine them.
 
@@ -101,7 +106,7 @@ Drafting and refining stay local. Publishing requires an explicit request:
 
 ```text
 /inux estimate publish
-/inux technical summary publish
+/inux ts publish
 /inux pr publish
 ```
 

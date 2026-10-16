@@ -2,52 +2,13 @@
 
 Use Summary content below for both `.inux/technical-summary.md` and the
 Description in `.inux/pr.md`. For writing, read [writing guidance](be-human.md) once.
-PR actions keep their [PR workflow](pr.md). Only `/inux technical summary` uses
-the standalone actions below; publication requires explicit intent. Do not
-automatically synchronize the files.
+PR actions use the matching program in [Inux routing](../SKILL.md).
 
-## Create or refine
-
-`/inux technical summary [request]` creates or refines `.inux/technical-summary.md`.
-Require ticket.md, but allow the summary file to be missing. Read the ticket and
-existing summary together, preserving accurate developer notes and unrequested
-content. Stop if an existing summary identifies another ticket; never reset the task.
-
-Use the requested implementation scope and current evidence. Inspect branch/HEAD
-before reusing earlier code evidence. Review relevant local changes or an explicitly
-identified commit range; ask only if scope is unclear. Follow exact imports or
-symbols only to resolve material gaps. Wording edits need no code investigation.
-Do not run tests solely to write prose; distinguish observed checks from proposed
-verification and report incomplete implementation honestly.
-
-For a new file, use `# TICKET-ID` followed by the Description body from the
-[PR template](../assets/pr.md), without its PR title or Description heading.
-For existing files, preserve the layout and apply Summary content below.
-Recheck the active ticket before saving only technical-summary.md. Report the
-path briefly. No PR target, fetch, clean-tree gate, commits, or publishing are
-required for this local writing action.
-
-## Publish to Jira
-
-`/inux technical summary publish` posts the saved standalone summary as a Jira
-comment. Require ticket.md and technical-summary.md with matching ticket IDs,
-completed Summary content fields, and no placeholders or unsupported claims.
-Report missing/incomplete content; do not create or rewrite the draft while publishing.
-
-Use private acli under the shared Jira execution rule:
-`jira workitem comment list --key TICKET-ID --json --paginate`.
-Check duplicates and material clarifications. Report identical content without
-posting again; never replace unrelated comments. If evidence contradicts the
-saved summary, stop and ask whether to revise it, leaving the file unchanged.
-
-Convert with private ix: `adf ABSOLUTE_SUMMARY_PATH TEMPORARY_OUTPUT.json`.
-Inspect the ADF and recheck ticket ID and saved content before posting.
-Use private acli:
-`jira workitem comment create --key TICKET-ID --body-file ABSOLUTE_ADF_PATH --json`.
-Consult only exact subcommand help when needed; never rebuild ADF manually.
-Inspect remote state before retrying uncertain writes. Remove temporary output
-on success or failure. Report the comment/ticket URL; look it up only if missing.
-Leave task files unchanged. This action posts only the standalone summary.
+For `/inux ts generate`, `/inux ts improve`, or `/inux ts publish`, execute
+[ts.flow](ts.flow), which USEs the selected mode file. `ts create` aliases `ts generate`;
+`/inux technical summary [request]` remains an alias.
+Bare requests generate missing/empty summaries and otherwise improve them.
+Publication requires explicit intent. Do not automatically synchronize the files.
 
 ## Summary content
 

@@ -1,0 +1,36 @@
+CHECK mode == "generate"
+
+DO Read ../be-human.md once and ../technical-summary.md#summary-content for writing.
+
+DO Inspect branch/HEAD before reusing earlier code evidence. Resolve the requested
+    implementation scope; retain Boolean scope_is_clear. Wording edits need no code
+    investigation.
+
+IF scope_is_clear == FALSE:
+    ASK "Which changes or commit range should this technical summary cover?" AS summary_scope
+
+    DO Resolve scope from summary_scope; update scope_is_clear.
+
+    CHECK scope_is_clear == TRUE
+
+DO Review relevant local changes or the explicitly identified commit range within the
+    resolved scope. For wording edits, use existing evidence without code investigation.
+    Follow exact imports or symbols only for material gaps. No PR target, fetch, clean-tree
+    gate, commits, or tests solely to write prose. Distinguish observed checks from proposed
+    verification and report incomplete implementation honestly.
+
+DO Prepare in-memory draft using the shared Summary content rules. For a new file, use
+    a # TICKET-ID heading followed by the Description body from ../../assets/pr.md, without the PR
+    title or Description heading. For existing files, preserve layout, accurate developer notes,
+    and unrequested content; generate must not reset an existing summary.
+
+CHECK Requested content in draft is supported and complete, with no placeholders in changed
+    fields. Preserve accurate developer judgments and report unrelated incomplete fields.
+
+DO Recheck ticket.md's active ID as current_ticket_id.
+
+CHECK current_ticket_id == ticket_id
+
+DO Save draft only to summary_path, then verify the saved file once against draft.
+
+PRINT with summary_path, material uncertainty, and unrelated gaps, briefly.
