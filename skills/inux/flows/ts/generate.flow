@@ -1,36 +1,43 @@
-CHECK mode == "generate"
+IF @mode != "generate"
+    RETURN "Technical-summary generation was not selected."
 
-DO Read ../../references/be-human.md once and ../../references/technical-summary.md#summary-content for writing.
+USE ../../references/be-human.md AS writing_guidance
+USE ../../references/technical-summary.md#summary-content AS summary_rules
+USE ../../assets/pr.md AS pr_template
 
-DO Inspect branch/HEAD before reusing earlier code evidence. Resolve the requested
-    implementation scope; retain Boolean scope_is_clear. Wording edits need no code
-    investigation.
+DO Inspect branch and HEAD before reusing earlier code evidence. Resolve the
+    requested implementation scope. Return an object with scope and
+    scope_is_clear. Wording edits need no code investigation. AS scope_state
 
-IF scope_is_clear == FALSE:
+IF @scope_state.scope_is_clear == FALSE
     ASK "Which changes or commit range should this technical summary cover?" AS summary_scope
 
-    DO Resolve scope from summary_scope; update scope_is_clear.
+    DO Resolve @summary_scope into a valid implementation scope. Return an
+        object with scope and scope_is_clear. AS scope_state
 
-    CHECK scope_is_clear == TRUE
+    IF @scope_state.scope_is_clear == FALSE
+        RETURN "Technical-summary generation stopped because the scope is unclear."
 
-DO Review relevant local changes or the explicitly identified commit range within the
-    resolved scope. For wording edits, use existing evidence without code investigation.
-    Follow exact imports or symbols only for material gaps. No PR target, fetch, clean-tree
-    gate, commits, or tests solely to write prose. Distinguish observed checks from proposed
-    verification and report incomplete implementation honestly.
+DO Review relevant local changes or the explicitly identified commit range in
+    @scope_state.scope. Follow exact imports or symbols only for material gaps.
+    Do not choose a PR target, fetch, require a clean tree, create commits, or
+    run tests solely to write prose. Distinguish observed checks from proposed
+    verification. Return the evidence and material uncertainty. AS evidence
 
-DO Prepare in-memory draft using the shared Summary content rules. For a new file, use
-    a # TICKET-ID heading followed by the Description body from ../../assets/pr.md, without the PR
-    title or Description heading. For existing files, preserve layout, accurate developer notes,
-    and unrequested content; generate must not reset an existing summary.
+DO Prepare an in-memory draft using @evidence, @writing_guidance, and
+    @summary_rules. For a new file, use a # TICKET-ID heading followed by the
+    Description body shape from @pr_template without the PR title or Description
+    heading. For an existing file, preserve its layout, accurate notes, and
+    unrequested content. Return an object with draft and unrelated_gaps. AS summary_draft
 
-CHECK Requested content in draft is supported and complete, with no placeholders in changed
-    fields. Preserve accurate developer judgments and report unrelated incomplete fields.
+DO Verify the requested content in @summary_draft.draft is supported, complete,
+    and placeholder-free while preserving accurate developer judgments.
 
-DO Recheck ticket.md's active ID as current_ticket_id.
+DO Read the first heading from @ticket_path and return only its ticket ID. AS current_ticket_id
 
-CHECK current_ticket_id == ticket_id
+IF @current_ticket_id != @ticket_id
+    RETURN "Technical-summary generation stopped because the active ticket changed."
 
-DO Save draft only to summary_path, then verify the saved file once against draft.
+DO Save @summary_draft.draft only to @summary_path and verify it once.
 
-PRINT with summary_path, material uncertainty, and unrelated gaps, briefly.
+PRINT Report @summary_path, @evidence, and @summary_draft.unrelated_gaps briefly.

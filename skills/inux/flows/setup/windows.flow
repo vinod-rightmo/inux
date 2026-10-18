@@ -1,0 +1,24 @@
+RUN powershell.exe -NoProfile -NonInteractive -Command "[Environment]::GetFolderPath('UserProfile'); Write-Output 'windows'; [Runtime.InteropServices.RuntimeInformation]::OSArchitecture" AS host_result
+
+DO Parse @host_result.stdout. Normalize x86_64, AMD64, or X64 to amd64 and
+    aarch64, ARM64, or arm64 to arm64. Resolve storage to @storage_override when
+    non-NULL, otherwise <home>/.inux; resolve bin to <storage>/tools/bin and
+    private absolute gh.exe, acli.exe, and ix.exe paths. Bind tag to "v" plus @target and
+    expected_version to "ix " plus @target. Return an object with home, os,
+    arch, storage, bin, gh, acli, ix, tag, and expected_version. AS host
+
+DO Verify @host is windows on amd64.
+
+DO Probe only @host.gh, @host.acli, and @host.ix. Capture their versions plus
+    GitHub and Jira authentication status as data; a missing or broken tool is
+    not ready. Require ix to equal @host.expected_version. Keep working gh and
+    acli unless @requested_gh_version or @requested_acli_version requests an
+    upgrade. Return an object with
+    github, atlassian, inux, and complete. AS tool_state
+
+SET github = @tool_state.github
+SET atlassian = @tool_state.atlassian
+SET inux = @tool_state.inux
+SET setup_complete = @tool_state.complete
+
+USE common.flow

@@ -1,28 +1,48 @@
-DO Using only the user's request after /inux ts or /inux technical summary, set mode to
-    "generate" for creating or summarizing changes, "improve" for editing or refining the saved
-    summary, or "publish" for an explicit publication request. Classify meaning, not exact
-    keywords; create aliases generate and refine aliases improve. Preserve the request for the
-    selected route. Set mode to NULL for missing, unsupported, conflicting, or ambiguous intent.
-    Never infer publication or choose a partial route for multiple requested actions.
-    Do not inspect projects, read task files, or call tools to classify intent.
+DO Classify only the user's request after /inux ts or /inux technical summary.
+    Return an object with request containing the unchanged request and mode equal
+    to "generate" for creating or summarizing changes, "improve" for editing or
+    refining the saved summary, "publish" only for explicit publication, or NULL
+    for missing, unsupported, conflicting, or ambiguous intent. Treat create as
+    generate and refine as improve. Do not inspect the project, task files, or
+    tools. AS route
 
-IF mode == NULL:
-    STOP "Error: cannot classify technical-summary request. Usage: /inux ts [request]. Request generate, improve, or publish; for example: /inux ts summarize these changes."
+SET request = @route.request
+SET mode = @route.mode
 
-CHECK mode is one of "generate", "improve", "publish".
+IF @mode == NULL
+    RETURN "Error: cannot classify technical-summary request. Usage: /inux ts [request]. Request generate, improve, or publish; for example: /inux ts summarize these changes."
 
-DO Resolve absolute project, ticket_path, and summary_path in active .inux. Require ticket.md;
-    allow technical-summary.md to be missing. Never reset the task or synchronize pr.md.
+IF @mode != "generate" AND @mode != "improve" AND @mode != "publish"
+    RETURN "Error: unsupported technical-summary action."
 
-DO Read full ticket.md and existing technical-summary.md together; retain ticket_id,
-    saved_summary (NULL if missing), and Booleans summary_exists and summary_is_empty.
-    Reject a supplied-ID mismatch or an existing summary identifying another ticket.
+IF @mode == "publish"
+    DO Verify that @request explicitly requests technical-summary publication.
 
-IF mode == "generate":
+DO Resolve the absolute project, active .inux/ticket.md, and
+    .inux/technical-summary.md paths. Require ticket.md; allow the summary to be
+    missing. Never reset the task or synchronize pr.md. Return an object with
+    project, ticket_path, and summary_path. AS files
+
+SET project = @files.project
+SET ticket_path = @files.ticket_path
+SET summary_path = @files.summary_path
+
+DO Read @ticket_path and the existing @summary_path together. Reject a supplied
+    ticket-ID mismatch or a saved summary identifying another ticket. Return an
+    object with ticket_id, saved_summary (NULL if missing), summary_exists, and
+    summary_is_empty. AS summary_state
+
+SET ticket_id = @summary_state.ticket_id
+SET saved_summary = @summary_state.saved_summary
+SET summary_exists = @summary_state.summary_exists
+SET summary_is_empty = @summary_state.summary_is_empty
+
+IF @mode == "generate"
     USE ts/generate.flow
+    RETURN
 
-IF mode == "improve":
+IF @mode == "improve"
     USE ts/improve.flow
+    RETURN
 
-IF mode == "publish":
-    USE ts/publish.flow
+USE ts/publish.flow

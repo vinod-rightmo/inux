@@ -1,127 +1,26 @@
 # x-release-please-start-version
-SET target = "1.0.0"
+SET default_target = "1.0.0"
 # x-release-please-end
 
-SET temp = NULL
-
-SET created_paths = []
-
-SET gh_source = "https://github.com/cli/cli/releases"
-
+SET default_repository = "vinod-rightmo/inux"
+SET gh_releases_api = "https://api.github.com/repos/cli/cli/releases"
 SET acli_source = "https://developer.atlassian.com/cloud/acli/guides/download-supported-packages/"
 
-DO Detect OS/CPU; resolve private absolute tools under <storage>/tools/bin (.exe on Windows),
-    default <user-home>/.inux, honoring overrides and rejecting PATH-only tools. Select
-    checksum_verifier: macOS shasum -a 256 -c, Linux sha256sum -c, native Windows equivalent. Use
-    short native commands/extraction; no generated installers/helpers/parsers.
+DO Resolve setup inputs. Return an object with windows TRUE only on Windows;
+    target from the explicit ix-version override or @default_target; repository
+    from the explicit override or @default_repository; storage_override from
+    the explicit storage root or NULL; and requested_gh_version and
+    requested_acli_version from explicit overrides or NULL. AS setup_request
 
-DO Create private bin/missing parents one at a time; append each newly created directory to
-    created_paths immediately, including partial success. Never track pre-existing directories.
-    No package managers/sudo/external symlinks/source builds/PATH/profile edits/compiler/Node
-    dependency. In zsh avoid path and keep heredoc terminators alone.
+SET windows = @setup_request.windows
+SET target = @setup_request.target
+SET repository = @setup_request.repository
+SET storage_override = @setup_request.storage_override
+SET requested_gh_version = @setup_request.requested_gh_version
+SET requested_acli_version = @setup_request.requested_acli_version
 
-DO Batch availability/version/auth probes, skipping missing tools and capturing every exit as data:
-    ix --version (must equal ix <target>), gh --version, gh auth status --hostname github.com, acli
-    --version, acli jira auth status.
+IF @windows == TRUE
+    USE setup/windows.flow
+    RETURN
 
-DO Record inux/github/atlassian: ready = version passed with no requested upgrade; authenticated =
-    auth passed. Record setup with complete TRUE only when all versions/both auth checks pass
-    without upgrades.
-
-IF setup is complete:
-    DO Report probe results.
-
-    STOP "Setup already complete."
-
-DO Set temp to a unique unused absolute path under <storage>/tmp before creating it for all
-    metadata/assets/downloads. Create missing parents one at a time, immediately appending each
-    newly created parent to created_paths; never track pre-existing directories. Use separate
-    installer subdirectories inside temp.
-
-ASYNC github_setup:
-    IF github is not ready:
-        DO Select the requested gh version or official host release from gh_source.
-
-        CHECK gh archive and exact checksum entry match host OS/CPU.
-
-        DO Download vendor gh archive, verify exact-asset SHA-256 with checksum_verifier, extract,
-            and install directly at private gh. Gate each operation on success; preserve working
-            tools and set Unix executable permissions where applicable.
-
-        DO Verify private gh --version; inspect only exact help for syntax/version errors.
-
-        DO Probe private gh auth status --hostname github.com; record unauthenticated as data.
-
-    DO Record final gh path, version, and Boolean authenticated field as tool; reuse probes if
-        unchanged.
-
-ASYNC atlassian_setup:
-    IF atlassian is not ready:
-        DO Inspect acli_source once; select supported host standalone binary, honoring upgrades.
-
-        CHECK The host binary is supported and available.
-
-        DO Download official acli binary; verify linked exact-asset checksum with checksum_verifier,
-            or report absence and use official HTTPS binary. Stop on mismatch.
-
-        DO Install acli directly at its private path, preserving working tools and Unix executable
-            permissions; verify --version. Gate copy on success; inspect help only for
-            syntax/version errors.
-
-        DO Probe private acli jira auth status; record unauthenticated as data.
-
-    DO Record final acli path, version, and Boolean authenticated field as tool; reuse probes if
-        unchanged.
-
-WAIT github_setup
-
-SET github_result = result of github_setup
-
-SET github = tool of github_result
-
-IF github is not authenticated:
-    DO Run private gh auth login --hostname github.com --web; await browser login, keeping
-        gh-managed credentials without chat tokens.
-
-    DO Recheck only private gh auth status --hostname github.com; record the result.
-
-IF inux is not ready:
-    DO Select repo override or vinod-rightmo/inux, v<target>, and host asset: ix-darwin-amd64,
-        ix-darwin-arm64, ix-linux-amd64, ix-linux-arm64, or ix-windows-amd64.exe.
-
-    CHECK The exact target release and host asset exist.
-
-    DO Download ASSET and checksums.txt into temp using private gh release download TAG --repo
-        OWNER/REPO --pattern ASSET --pattern checksums.txt --dir TEMP_DIRECTORY with resolved
-        literal arguments.
-
-    DO Verify exact ix asset SHA-256 with checksum_verifier, then install directly at private ix
-        with Unix executable permissions where applicable. Gate verification/copy on success;
-        preserve working tools.
-
-    DO Verify private ix --version equals ix <target> and run --help once; record results.
-
-WAIT atlassian_setup
-
-SET atlassian_result = result of atlassian_setup
-
-SET atlassian = tool of atlassian_result
-
-IF atlassian is not authenticated:
-    DO Run private acli jira auth login --web; await browser login, keeping acli-managed credentials
-        without chat tokens.
-
-    DO Recheck only private acli jira auth status; record the result.
-
-FINALLY:
-    IF temp != NULL:
-        DO Remove only this run's temp if it exists; report leftovers/cleanup errors. Preserve
-            tools/credentials/task/unrelated files; never repeat successful checks.
-
-    IF created_paths is not empty:
-        DO Remove only still-empty directories in created_paths, deepest first; preserve all
-            pre-existing/nonempty directories, tools/credentials/task/unrelated files. Report
-            leftovers/cleanup errors; never repeat successful checks.
-
-PRINT with compact tool/version/status table, private install directory, failures/checksum/cleanup
-    limits; omit successful hashes, metadata, listings, and help output.
+USE setup/unix.flow

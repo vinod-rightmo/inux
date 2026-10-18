@@ -1,16 +1,21 @@
-CHECK mode == "explain"
+IF @mode != "explain"
+    RETURN "PR explanation was not selected."
 
-DO Read ticket.md/pr.md together; retain exact saved_pr and preserve unrequested sections.
+USE ../../references/be-human.md AS writing_guidance
+USE ../../references/technical-summary.md#summary-content AS summary_rules
 
-DO Check branch/HEAD before reusing implementation evidence; inspect committed changes only for
-    material gaps and reuse other verified evidence. No target/fetch/readiness pass.
+DO Read @ticket_path and @pr_path together. Return an object with saved_pr and
+    the exact unrequested sections that must be preserved. AS documents
 
-DO Read ../../references/be-human.md; for Description use ../../references/technical-summary.md#summary-content without
-    standalone actions.
+DO Check branch and HEAD before reusing implementation evidence. Inspect
+    committed changes only for material gaps and reuse other verified evidence.
+    Do not fetch, choose a target, or run a readiness pass. Return the verified
+    evidence and observed checks. AS evidence
 
-DO Explain saved_pr using verified evidence without writes; distinguish prior
-    readiness/current state, implying no fresh checks.
+DO Explain @documents.saved_pr using @evidence, @writing_guidance, and
+    @summary_rules without writing files. Distinguish prior readiness from
+    current state. Return a concise report with the changed path or observed
+    checks, verified PR URL or state when available, requested explanation,
+    blockers, gaps, and partial success. AS explanation
 
-PRINT with changed path/observed checks, verified PR URL/state or requested explanation,
-    blockers/gaps, and partial success; briefly. Keep checklists in chat, preserve pr.md on publish,
-    and inspect remote state before uncertain-write retries.
+PRINT @explanation

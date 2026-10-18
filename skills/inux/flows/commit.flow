@@ -1,50 +1,73 @@
-DO Resolve absolute project. Read branch/HEAD, status, and Git operation state; record Boolean
-    changes_present.
+DO Resolve the absolute project. Read branch, HEAD, porcelain status, and active
+    Git operation state. Return an object with project, branch, attached_head,
+    conflicts, active_operation, and changes_present. AS context
 
-CHECK HEAD is attached, with no conflicts or active merge/rebase/cherry-pick/revert.
+DO Verify @context has an attached HEAD, no unresolved conflicts, and no active
+    merge, rebase, cherry-pick, or revert.
 
-IF changes_present == FALSE:
-    STOP "There are no changes to commit."
+IF @context.changes_present == FALSE
+    RETURN "There are no changes to commit."
 
-DO Read .inux/ticket.md in full; extract ticket_id from its first heading.
+DO Read @context.project/.inux/ticket.md in full. Return an object with ticket_id
+    from its first heading and ticket content. AS ticket
 
-CHECK ticket_id is valid, any supplied ID matches, and the branch contains the exact case-sensitive
-    ticket token, not part of a longer ID; otherwise abort before staging.
+DO Verify @ticket.ticket_id is valid, any supplied ID matches it, and
+    @context.branch contains the exact case-sensitive ticket token without
+    making it part of a longer ID.
 
-DO Read complete staged/unstaged diffs and relevant untracked files. Understand what changed and why
-    using ticket/code context. Select requested or clear ticket changes; record scope.clear.
+DO Read complete staged and unstaged diffs plus relevant untracked files.
+    Understand what changed using @ticket and code context. Select requested or
+    clearly related ticket changes. Return an object with clear, selected
+    changes, and excluded changes. AS scope
 
-IF scope is not clear:
+IF @scope.clear == FALSE
     ASK "Which changes should be committed, including already staged changes?" AS scope_input
 
-    DO Resolve scope from scope_input; update scope.clear.
+    DO Resolve @scope from @scope_input. Return an updated object with clear,
+        selected changes, and excluded changes. AS scope
 
-CHECK scope is clear; no unrelated staged changes or unintended secrets/artifacts enter a commit.
+IF @scope.clear != TRUE
+    RETURN "Commit stopped because the intended change scope is unclear."
 
-DO Group changes by purpose: one commit for related changes, multiple for independent purposes,
-    dependencies first. Record ordered groups and commit_count; draft each message from its diff.
+DO Verify @scope excludes unrelated staged changes and unintended secrets or
+    artifacts.
 
-CHECK Each message is one line <TICKET-ID>: <Capitalized present-tense summary>, with the exact
-    active ID once, colon plus one space, and no body or extra prefixes.
+DO Group @scope.selected changes by purpose, with dependencies first. Draft one
+    commit for related changes and separate commits for independent purposes.
+    Every message must be one line <TICKET-ID>: <Capitalized present-tense
+    summary> using @ticket.ticket_id exactly once, followed by colon and one
+    space, with no body or extra prefix. Return an object with ordered groups
+    and commit_count. AS commit_plan
 
-DO Run missing repository-required verification; reuse results for unchanged content, keeping hooks.
+DO Run only missing repository-required verification for @scope.selected,
+    reusing results for unchanged content and keeping repository hooks enabled.
+    Return the observed verification results. AS verification
 
-CHECK Required verification passed.
+DO Verify @verification passed every required check.
 
-REPEAT commit_count TIMES:
-    DO Select next group and message; recheck ticket ID and branch.
+SET commit_index = 0
+SET completed_commits = []
 
-    CHECK Ticket and branch still match the reviewed task.
+REPEAT @commit_plan.commit_count TIMES
+    DO Select the group at @commit_index from @commit_plan.groups. Re-read the
+        active ticket ID and branch and verify both still match @ticket.ticket_id
+        and @context.branch. Return the selected group with message, paths, and
+        hunks. AS group
 
-    DO Stage only this group's paths/hunks; preserve partial staging and unrelated work/index.
-        Abort if safe separation is impossible.
+    DO Stage only @group.paths and @group.hunks. Preserve partial staging and
+        unrelated work and index entries. Fail if safe separation is impossible.
 
-    SHELL `git -C {project} diff --cached --check` AS staged_check
+    RUN git -C @context.project diff --cached --check AS staged_check
 
-    CHECK Full staged diff is nonempty, exactly the reviewed group, verified, and matches message.
+    DO Read the full staged diff. Verify it is nonempty, exactly @group,
+        covered by @verification, and accurately described by @group.message.
 
-    SHELL `git -C {project} commit -m {message}` AS commit_result
+    RUN git -C @context.project commit -m @group.message AS commit_result
 
-    DO Record SHA, full message, and remaining status; advance to next group.
+    DO Read the created commit SHA and remaining status. Append an object with
+        the SHA and @group.message to @completed_commits and return the updated
+        array. AS completed_commits
 
-PRINT with committed SHAs/messages and remaining changes; on failure include any completed commits.
+    SET commit_index = @commit_index + 1
+
+PRINT Report @completed_commits and any remaining changes. Include completed commits if a later group failed.

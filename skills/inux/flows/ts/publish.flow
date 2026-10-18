@@ -1,60 +1,54 @@
-SET temp_dir = NULL
+IF @mode != "publish"
+    RETURN "Technical-summary publication was not selected."
 
-FINALLY:
-    IF temp_dir != NULL:
-        DO Remove only this run's ADF output/temp directory; report cleanup errors.
+IF @summary_exists != TRUE
+    RETURN "Technical-summary publication requires an existing summary."
 
-CHECK mode == "publish"
+USE ../../references/technical-summary.md#summary-content AS summary_rules
 
-CHECK The developer explicitly requested publishing this technical summary.
+DO Verify @request explicitly requests publication and @saved_summary has the
+    matching @ticket_id with complete, placeholder-free content satisfying
+    @summary_rules. Do not create or rewrite invalid content.
 
-CHECK summary_exists == TRUE
+DO Resolve the private absolute acli and ix executables under shared Inux
+    guidance. Report missing tools without setup, login, or version probes.
+    Return an object with acli and ix. AS tools
 
-CHECK saved_summary has a matching ticket ID and completed Summary content fields from
-    ../../references/technical-summary.md#summary-content, without placeholders or unsupported claims.
-    Report missing/incomplete content without creating or rewriting the draft.
+RUN @tools.acli jira workitem comment list --key @ticket_id --json --paginate AS comments_result
 
-DO Resolve private absolute acli/ix under shared Inux guidance; report missing tools without
-    setup/login/version probes. Follow the shared Jira execution rule for every Jira call.
-    Consult only exact subcommand help when needed.
+DO Parse @comments_result.stdout as JSON. Check for duplicate summaries and
+    material clarifications. Return an object with
+    evidence_contradicts_summary, identical_comment, and duplicate_url. Never
+    replace unrelated comments. AS comment_state
 
-SHELL `{acli} jira workitem comment list --key {ticket_id} --json --paginate` AS comments_result
+IF @comment_state.evidence_contradicts_summary == TRUE
+    ASK "Jira evidence contradicts the saved summary. Type yes to revise it later, or no to leave it unchanged." AS revision_request
 
-SET comments = JSON(stdout of comments_result)
+    DO Normalize @revision_request to lowercase "yes" or "no"; return "invalid"
+        for every other answer. AS revision_choice
 
-DO Check comments for duplicates and material clarifications; record Booleans
-    evidence_contradicts_summary and identical_comment, plus any duplicate URL.
-    Never replace unrelated comments.
+    IF @revision_choice == "yes"
+        RETURN "Publication stopped. Run /inux ts improve with the new evidence; the saved summary is unchanged."
 
-IF evidence_contradicts_summary == TRUE:
-    ASK "Jira evidence contradicts the saved summary. Would you like to revise it?" AS revision_request
+    IF @revision_choice == "no"
+        RETURN "Publication stopped because evidence contradicts the draft; the saved summary is unchanged."
 
-    STOP "Publication stopped because evidence contradicts the draft; the saved summary is unchanged."
+    RETURN "Publication stopped because the answer was not exactly yes or no; the saved summary is unchanged."
 
-IF identical_comment == FALSE:
-    DO Read ../../references/cli.md for ix ADF conversion; never build ADF manually.
+IF @comment_state.identical_comment == FALSE
+    USE ../../references/cli.md AS cli_guidance
 
-    DO Create unique temp_dir; set absolute adf_path inside it.
+    DO Publish @saved_summary as one bounded transaction. Follow @cli_guidance.
+        Create one unique private temporary directory and ADF path. Run @tools.ix
+        with the separate arguments adf, @summary_path, and that path; verify the
+        ADF faithfully represents @saved_summary. Immediately re-read the active
+        ticket ID and saved summary, and do not publish if either differs from
+        @ticket_id or @saved_summary. Then run @tools.acli with the separate
+        arguments jira, workitem, comment, create, --key, @ticket_id, --body-file,
+        the ADF path, and --json. Parse and verify the comment or ticket URL,
+        looking it up only when absent. Remove only the unique temporary directory
+        before completing or failing. Return the verified URL. AS publication_url
+ELSE
+    SET publication_url = @comment_state.duplicate_url
 
-    SHELL `{ix} adf {summary_path} {adf_path}` AS adf_result
-
-    DO Inspect ADF for faithful saved-summary conversion.
-
-    DO Immediately before posting, recheck ticket.md's active ID as current_ticket_id and
-        compare the saved summary with saved_summary; record Boolean summary_is_unchanged.
-
-    CHECK current_ticket_id == ticket_id
-
-    CHECK summary_is_unchanged == TRUE
-
-    SHELL `{acli} jira workitem comment create --key {ticket_id} --body-file {adf_path} --json` AS publish_result
-
-    SET published = JSON(stdout of publish_result)
-
-    DO Retain the returned comment/ticket URL; look it up only if missing. Inspect remote
-        state before retrying uncertain writes. Leave task files unchanged.
-
-ELSE:
-    DO Retain identical comment URL/status for the reply; do not post again.
-
-PRINT with the verified Jira URL or duplicate status, briefly; leave task files unchanged.
+PRINT Report @publication_url or duplicate status briefly and leave task files unchanged.

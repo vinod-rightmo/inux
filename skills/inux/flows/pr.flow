@@ -1,34 +1,46 @@
-DO Using only the user's request after /inux pr, set mode to "prepare" for creating or drafting
-    a PR, including a target-only request, "refine" for editing or improving its title or
-    description, "explain" for explaining, or "publish" for an explicit publication request.
-    Classify meaning, not exact keywords; preserve the request for the selected route.
-    Set mode to NULL for missing, unsupported, conflicting, or ambiguous intent. Never infer
-    publication or choose a partial route for multiple requested actions.
-    Do not inspect projects, read task files, or call tools to classify intent.
+DO Classify only the user's request after /inux pr. Return an object with request
+    containing the unchanged request and mode equal to "prepare" for creating or
+    drafting a PR, including a target-only request, "refine" for editing its
+    title or description, "explain" for explaining, "publish" only for explicit
+    publication, or NULL for missing, unsupported, conflicting, or ambiguous
+    intent. Do not inspect the project, task files, or tools. AS route
 
-IF mode == NULL:
-    STOP "Error: cannot classify PR request. Usage: /inux pr [request]. Request prepare, refine, explain, or publish; for example: /inux pr improve the title."
+SET request = @route.request
+SET mode = @route.mode
 
-CHECK mode is one of "prepare"/"publish"/"refine"/"explain".
+IF @mode == NULL
+    RETURN "Error: cannot classify PR request. Usage: /inux pr [request]. Request prepare, refine, explain, or publish; for example: /inux pr improve the title."
 
-IF mode == "publish":
-    CHECK The developer explicitly requested publishing this PR.
+IF @mode != "prepare" AND @mode != "refine" AND @mode != "explain" AND @mode != "publish"
+    RETURN "Error: unsupported PR action."
 
-DO Resolve absolute project, ticket_path, and pr_path; require ticket.md/pr.md (not estimate.md),
-    without reset/full reads. Read ticket heading as ticket_id; reject supplied-ID mismatch. Batch
-    independent reads/checks, retain exits, and reuse unchanged evidence/instructions.
+IF @mode == "publish"
+    DO Verify that @request explicitly requests PR publication.
 
-DO Resolve project AGENTS.md rules/checks and explicit user naming overrides; old history never
-    overrides.
+DO Resolve the absolute project and active .inux/ticket.md and pr.md paths.
+    Require ticket.md and pr.md without resetting the task. Read the active
+    ticket ID from the first heading and reject a supplied-ID mismatch. Return
+    an object with project, ticket_path, pr_path, and ticket_id. AS files
 
-IF mode == "prepare":
+SET project = @files.project
+SET ticket_path = @files.ticket_path
+SET pr_path = @files.pr_path
+SET ticket_id = @files.ticket_id
+
+DO Read applicable project AGENTS.md rules and explicit user naming overrides.
+    Return them as rules; old conversation history must not override current
+    rules. AS project_rules
+
+IF @mode == "prepare"
     USE pr/prepare.flow
+    RETURN
 
-IF mode == "refine":
+IF @mode == "refine"
     USE pr/refine.flow
+    RETURN
 
-IF mode == "explain":
+IF @mode == "explain"
     USE pr/explain.flow
+    RETURN
 
-IF mode == "publish":
-    USE pr/publish.flow
+USE pr/publish.flow

@@ -1,110 +1,77 @@
-CHECK mode == "prepare"
+IF @mode != "prepare"
+    RETURN "PR preparation was not selected."
 
-PRINT
-    - [ ] Git validation
-    - [ ] Evidence/verification
-    - [ ] Save/publication
-DO Set target from this request/prior explicit choice for this PR, including pr [publish] target
-    BRANCH. Otherwise NULL; never infer from defaults/existing PR.
+PRINT """
+- [ ] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
 
-IF target == NULL:
+DO Read @request and prior explicit choices for this PR. Return the explicitly
+    selected target branch, including a target-only request, or NULL. Never
+    infer a target from defaults or existing PRs. AS target
+
+IF @target == NULL
     ASK "Which destination branch should this PR target?" AS target
 
-CHECK target is nonempty and explicitly developer-selected.
+IF @target == ""
+    RETURN "PR preparation requires an explicitly selected destination branch."
 
-DO Inspect branch/HEAD/remotes/operation state once; record current_branch, checked_head,
-    repository, push_remote, target_remote. Resolve merge/rebase/cherry-pick/revert markers
-    through Git for worktrees.
+USE validate.flow
 
-SHELL `git -C {project} status --porcelain=v1 --untracked-files=all --ignore-submodules=none` AS status_result
+PRINT """
+- [x] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
 
-CHECK Attached HEAD, clean index/tree including untracked/submodules, and no
-    merge/rebase/cherry-pick/revert.
+DO Read @ticket_path and @pr_path together. Return an object with the complete
+    ticket, exact saved_pr, and unrequested PR sections that must be preserved. AS documents
 
-SHELL `git -C {project} check-ref-format --branch {current_branch}` AS branch_format
+RUN git -C @project diff --find-renames @merge_base @checked_head AS diff_result
 
-CHECK current_branch follows explicit naming rules/required validators; otherwise
-    <type>/<TICKET-ID>-<lowercase-kebab-description>, exact uppercase active ticket, type
-    feature/bugfix/hotfix/chore/refactor/perf/test/release, 1–6 lowercase letter/digit
-    description words separated by single hyphens. Count description words only; no ix/generated
-    validator.
+USE ../../references/be-human.md AS writing_guidance
+USE ../../references/technical-summary.md#summary-content AS summary_rules
+USE ../../assets/pr.md AS pr_template
 
-DO Fetch selected target ref from target_remote; record target_ref (TARGET_REF) and
-    target_revision. No fallback base/ref; require shared ancestry, not target ancestry.
+DO Review @diff_result.stdout and relevant code read-only. Verify
+    @checked_messages against implementation evidence. Follow exact imports or
+    symbols into direct dependencies only for material gaps and stop once claims
+    are supported. Return an object with evidence, material_concerns, and
+    observed_checks. Intent and messages are not implementation proof. AS review
 
-CHECK current_branch is a task branch distinct from target.
+DO Compose an in-memory PR draft from @documents, @review, @writing_guidance,
+    @summary_rules, and @pr_template. Preserve accurate developer notes, labels,
+    order, and unrequested sections. Default the title to one concise
+    <TICKET-ID>: <Capitalized action summary> line unless explicitly overridden.
+    Return only the completed draft. AS draft
 
-SHELL `git -C {project} merge-base {target_ref} HEAD` AS merge_base_result
+DO Run only missing project-required checks for the current code and inputs,
+    reusing unchanged observed results. Inspect one targeted manifest or
+    Makefile only when needed. Probe runtime health only after an actual failure.
+    Retain every exit and never mask failures. Return the verification results. AS verification
 
-SET merge_base = trim(stdout of merge_base_result)
+DO Verify @review has no unresolved material correctness concern, @verification
+    passed all required checks, @checked_messages and @draft are accurate, and
+    the ticket work is complete.
 
-CHECK merge_base is not empty
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [ ] Save/publication
+"""
 
-DO Set commit_range to target_ref followed by ..HEAD; retain the same TARGET_REF.
+DO Immediately re-read branch, HEAD, @target_ref revision, active ticket, Git
+    operation state, and the full index and tree. Revalidate only changed
+    dependencies. Verify they still match @checked_head, @target_revision,
+    @ticket_id, @review, and @verification. AS final_gate
 
-SHELL `git -C {project} log --reverse --format='%H%n%B%x00' {commit_range}` AS commits_result
+DO Save @draft only to @pr_path. Do not read it back, push, or publish.
 
-DO Retain all SHAs/full messages from commits_result as checked_messages, including merges; no
-    author/ticket filtering or inherited-target checks. Preserve whitespace; only record
-    separators/one terminal LF are not bodies. No other trimming, reconstruction, or per-commit
-    rereads.
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [x] Save/publication
+"""
 
-CHECK The PR commit range is nonempty.
-
-CHECK Every message follows explicit naming rules/required validators; otherwise one line
-    <TICKET-ID>: <Capitalized present-tense summary>, exact ticket once, colon plus one space,
-    meaningful uppercase-start summary, no bodies/extra prefixes/duplicate tickets.
-    Add/Fix/Update/Remove are examples, not a closed list. Report failing SHAs/rules; no
-    ix/generated validator.
-
-DO Retain branch, checked_head, target_revision, merge_base, checked_messages, and gate results.
-
-PRINT
-    - [x] Git validation
-    - [ ] Evidence/verification
-    - [ ] Save/publication
-DO Read full ticket.md/pr.md together; retain exact saved_pr.
-
-DO Review full merge-base-to-checked_head diff/code read-only; verify message accuracy. For
-    material gaps, name the missing fact, follow exact imports/symbols into direct dependencies,
-    and read relevant ranges. Stop once claims are supported; intent/messages are not
-    implementation proof. Retain evidence.
-
-DO Read ../../references/be-human.md once and ../../references/technical-summary.md#summary-content for writing; never run
-    standalone summary actions.
-
-DO Compose in-memory draft from code evidence, preserving accurate developer
-    notes/labels/order and required Description sections. Title: one concise <TICKET-ID>:
-    <Capitalized action summary> line unless overridden. Description follows Summary
-    content; read ../../assets/pr.md only for missing labels.
-
-DO Run missing project checks for current code/inputs, reusing unchanged observed results; one
-    targeted manifest/Makefile lookup if needed. Probe runtime health only on actual failure;
-    request host access on first use. Retain all exits; never mask failures with ||
-    true/trailing commands.
-
-CHECK Ticket work complete, messages/summary accurate, no material correctness concerns, and
-    required checks passed.
-
-PRINT
-    - [x] Git validation
-    - [x] Evidence/verification
-    - [ ] Save/publication
-DO Immediately before save/publish, recheck branch/HEAD/TARGET_REF revision/ticket/operation
-    state/full index/tree; compare saved_pr on publish. Revalidate only changed dependencies and
-    update retained evidence/checked_head.
-
-CHECK Current state matches verified gate/diff/implementation/checks; active ticket matches
-    ticket_id, HEAD attached, tree clean, no active operation.
-
-DO Save draft only to pr_path; successful write finishes prepare, without readback/byte
-    audit or push/publication.
-
-PRINT
-    - [x] Git validation
-    - [x] Evidence/verification
-    - [x] Save/publication
-
-PRINT with changed path/observed checks, verified PR URL/state or requested explanation,
-    blockers/gaps, and partial success; briefly. Keep checklists in chat, preserve pr.md on publish,
-    and inspect remote state before uncertain-write retries.
+PRINT Report @pr_path, @review.observed_checks, blockers, gaps, and partial success briefly.

@@ -1,34 +1,48 @@
-DO Using only the user's request after /inux estimate, set mode to "generate" for drafting or
-    creating, "improve" for editing or refining, "explain" for explaining, or "publish" for an
-    explicit publication request. Classify meaning, not exact keywords; preserve the request
-    for the selected route. Set mode to NULL for missing, unsupported, conflicting, or ambiguous
-    intent. Never infer publication or choose a partial route for multiple requested actions.
-    Do not inspect projects, read task files, or call tools to classify intent.
+DO Classify only the user's request after /inux estimate. Return an object with
+    request containing the unchanged request and mode equal to "generate" for
+    drafting or creating, "improve" for editing or refining, "explain" for
+    explaining, "publish" only for explicit publication, or NULL for missing,
+    unsupported, conflicting, or ambiguous intent. Do not inspect the project,
+    task files, or tools. AS route
 
-IF mode == NULL:
-    STOP "Error: cannot classify estimate request. Usage: /inux estimate [request]. Request generate, improve, explain, or publish; for example: /inux estimate improve the reasons."
+SET request = @route.request
+SET mode = @route.mode
 
-CHECK mode is one of "generate"/"improve"/"explain"/"publish".
+IF @mode == NULL
+    RETURN "Error: cannot classify estimate request. Usage: /inux estimate [request]. Request generate, improve, explain, or publish; for example: /inux estimate improve the reasons."
 
-DO Resolve absolute project, ticket_path, and estimate_path in active .inux; require files without
-    reset. Batch independent reads/searches, reuse unchanged evidence, and keep routine checks
-    quiet.
+IF @mode != "generate" AND @mode != "improve" AND @mode != "explain" AND @mode != "publish"
+    RETURN "Error: unsupported estimate action."
 
-DO Read ticket.md/full estimate.md together; retain saved_estimate, ticket_id, and Boolean
-    estimate_is_empty. Reject supplied-ID mismatch.
+DO Resolve the absolute project and active .inux/ticket.md and estimate.md paths.
+    Require both files without resetting the task. Return an object with project,
+    ticket_path, and estimate_path. AS files
 
-IF mode == "improve":
-    IF estimate_is_empty == TRUE:
-        SET mode = "generate"
+SET project = @files.project
+SET ticket_path = @files.ticket_path
+SET estimate_path = @files.estimate_path
 
-IF mode == "generate":
+DO Read @ticket_path and @estimate_path together. Reject a supplied ticket-ID
+    mismatch. Return an object with ticket_id, saved_estimate, and
+    estimate_is_empty. AS estimate_state
+
+SET ticket_id = @estimate_state.ticket_id
+SET saved_estimate = @estimate_state.saved_estimate
+SET estimate_is_empty = @estimate_state.estimate_is_empty
+
+IF @mode == "improve" AND @estimate_is_empty == TRUE
+    SET mode = "generate"
+
+IF @mode == "generate"
     USE estimate/write.flow
+    RETURN
 
-IF mode == "improve":
+IF @mode == "improve"
     USE estimate/write.flow
+    RETURN
 
-IF mode == "explain":
+IF @mode == "explain"
     USE estimate/explain.flow
+    RETURN
 
-IF mode == "publish":
-    USE estimate/publish.flow
+USE estimate/publish.flow

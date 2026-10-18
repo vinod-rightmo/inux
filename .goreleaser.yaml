@@ -49,6 +49,9 @@ archives:
       - src: skills/inux/flows/ts/*.flow
         dst: flows/ts
         strip_parent: true
+      - src: skills/inux/flows/setup/*.flow
+        dst: flows/setup
+        strip_parent: true
 
 checksum:
   name_template: checksums.txt

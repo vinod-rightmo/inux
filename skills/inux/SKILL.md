@@ -18,6 +18,9 @@ npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 ```
 
 Executable programs live in `flows/`; `references/` contains Markdown guidance only.
+Every program follows the current Flow interpreter: `RUN` invokes an explicit
+process, `DO` performs one bounded agent task, and `USE` loads guidance or a
+child program. Never use commands or syntax absent from that interpreter.
 
 For `/inux help`, execute [help.flow](flows/help.flow). Help needs no
 project inspection or tool checks.
