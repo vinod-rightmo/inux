@@ -1,8 +1,0 @@
-CHECK mode == "explain"
-
-DO Explain saved breakdown from current evidence; inspect only as needed, flag contradictions,
-    and do not edit/publish.
-
-PRINT with ticket_id, SP, file/verified URL, assumptions, unrelated gaps, justified SP changes, and
-    requested explanation; brief unless asked. Preserve task files on publish; inspect remote state
-    before uncertain-write retries.

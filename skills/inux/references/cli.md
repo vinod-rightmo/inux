@@ -1,36 +1,29 @@
 # Inux CLI
 
-Resolve `<cli>` to `<user-home>/.inux/tools/bin/ix` (`ix.exe` on Windows),
-or `<storage>/tools/bin/ix` when an explicit Inux storage root is supplied.
-Pass arguments separately and use an absolute PROJECT path (the ordinary
-repository root in a Git checkout).
-The compiled tool needs no Go or Node runtime. --version prints `ix <version>`;
-release builds use the same version as the skill, local unversioned builds use dev.
+Resolve `<cli>` to the binary beside this skill: `../bin/ix` relative to
+this reference, or `ix.exe` on Windows. Pass arguments separately and use
+an absolute PROJECT path (the repository root in a Git checkout). The compiled tool needs no Go or Node runtime.
 
 ```text
-<cli> --version
-<cli> task --snapshot PROJECT
-<cli> task [--expect SNAPSHOT] TEMPLATES_DIR PROJECT
+<cli> init PROJECT
+<cli> reset PROJECT
+<cli> remove PROJECT
 <cli> adf INPUT.md OUTPUT.json
 ```
 
-For `task`, pass the skill assets directory; ix reads both estimate.md and
-pr.md before replacement, copies both drafts, and creates empty ticket.md.
-`--snapshot` returns an opaque state token without writes; `--expect` rejects
-changes before replacement. Follow [task.flow](../flows/task.flow) for the complete workflow
-and Git exclusion. The agent passes an absolute PROJECT;
-direct CLI use may omit it to use the current directory. ix never fetches Jira
-or invokes another CLI.
-
-- `adf` reads UTF-8 Markdown and writes ADF JSON. Omit OUTPUT for ADF on stdout.
-  It never replaces its Markdown input, including aliases.
-
-The agent performs branch and commit convention checks directly; ix handles
-task files and ADF conversion.
+- `init` creates .inux/ and missing estimate/PR templates, preserving drafts.
+- `reset` creates .inux/ if needed and replaces both template files. It preserves
+  ticket.md and other files. Use once for a new task after Jira retrieval succeeds.
+- Both add .inux/ to .git/info/exclude directly in an ordinary Git checkout.
+  Existing entries and .gitignore are preserved. This MVP does not support
+  linked worktrees or discover a repository above PROJECT.
+- `remove` deletes only PROJECT/.inux and everything within it. It leaves the
+  Git exclusion in place. Only use when deletion is requested.
+- `adf` reads UTF-8 Markdown and writes ADF JSON. Omit OUTPUT to receive the actual
+  ADF document on stdout. It never replaces its Markdown input, including aliases.
 
 File operations and conversion-to-file report JSON on stdout. Errors are JSON
 on stderr with exit status 1; never assume success from partial output. No stdin,
 selective reset, task history, install/update service, or publishing wrappers.
-The skill package contains instructions and templates, without executables. If ix is missing or cannot run,
-follow [setup.flow](../flows/setup.flow) when setup is requested; otherwise report that setup
-is needed. Do not silently use a PATH binary or another platform's executable.
+The native MVP package contains one platform's binary. If it cannot run, report
+that limitation; do not invent a release URL or silently use an unrelated CLI.

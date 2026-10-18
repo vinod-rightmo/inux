@@ -1,25 +1,27 @@
 # Write like a developer
 
-Write as a teammate explaining work to a capable developer who is new to the
-feature. Assume programming knowledge, not knowledge of this project’s workflows.
+Write like a knowledgeable teammate explaining the work to another developer.
+Sound natural and direct, not promotional, ceremonial, or machine-generated.
 
-- Open with a short, direct sentence stating the result, problem, or risk.
-  Add conditions and implementation detail afterward, keeping the opening easy
-  to enter without decoding several ideas at once.
-- Use plain English and active verbs. Introduce unfamiliar feature terms before
-  relying on them; explain what a component or stored value does before naming it.
-- Connect the user action, observed behavior, cause, and fix. Each sentence should
-  carry one main idea and build on the previous sentence.
-- Use code identifiers only when they help locate or explain the change; describe
-  their purpose instead of presenting a sequence of function or variable names.
-- Use a short concrete example when it makes behavior or cause easier to grasp.
-  Make hypothetical examples clear and consistent with verified behavior.
-- Be specific about the actual change; avoid wording that fits any ticket.
-- Preserve the developer's accurate wording, emphasis, and judgments.
-- Remove repetition, filler, promotional language, and unnecessary headings.
-- Include details only when they clarify cause, implementation, or impact.
-- Do not invent results, personal experience, slang, or fake quotations.
+- Lead with the concrete change, reason, behavior, or risk. Skip throat-clearing
+  such as “This document provides” or “It is important to note.”
+- Prefer plain words, active verbs, and short, connected sentences. Use technical
+  terms when they are the project’s precise vocabulary, not to sound impressive.
+- Name the actual repository, module, command, API, behavior, and constraint.
+  Specific evidence sounds more credible than broad claims.
+- Keep the tone conversational and professional. Write for a busy reviewer who
+  needs the point quickly, not for an audience that needs to be persuaded.
+- Preserve accurate developer-authored wording and judgment. Improve awkward or
+  vague text without replacing the developer’s voice with a polished essay.
+- Remove repetition, obvious conclusions, unnecessary headings, and filler.
+  Every sentence should add implementation detail, reasoning, impact, risk, or
+  verification.
+- Avoid stock phrases and inflated words such as “comprehensive,” “robust,”
+  “seamless,” “leverages,” and “ensures” unless the evidence specifically
+  supports them.
+- Do not manufacture humanity with slang, jokes, typos, fake quotations,
+  personal anecdotes, or invented first-person experience.
 
-Read once as someone unfamiliar with the feature: can they explain what changed
-and why without opening the code? Keep the context needed for understanding;
-concision should remove repetition, not compress several ideas into one sentence.
+Before finishing, read the result once as a code reviewer. If a sentence sounds
+like a status template or could describe almost any ticket, make it more specific
+or remove it.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Inux"
-  short_description: "Manage Jira tasks, branches, commits, and PR drafts"
-  default_prompt: "Use $inux for the requested task, branch, commit, estimate, or PR action; publish only when explicitly requested."
+  short_description: "Manage Inux files and draft Jira and PR content"
+  default_prompt: "Use $inux for the requested task in .inux/, publishing only when explicitly requested."
