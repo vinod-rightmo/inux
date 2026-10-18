@@ -1,8 +1,9 @@
-CHECK mode == "explain"
+IF @mode != "explain"
+    RETURN "Estimate explanation was not selected."
 
-DO Explain saved breakdown from current evidence; inspect only as needed, flag contradictions,
-    and do not edit/publish.
+DO Explain @saved_estimate using current evidence. Inspect only material gaps,
+    flag contradictions, and do not edit or publish. Return a concise report
+    containing @ticket_id, the saved SP, the file or verified URL, assumptions,
+    unrelated gaps, justified SP changes, and the requested explanation. AS explanation
 
-PRINT with ticket_id, SP, file/verified URL, assumptions, unrelated gaps, justified SP changes, and
-    requested explanation; brief unless asked. Preserve task files on publish; inspect remote state
-    before uncertain-write retries.
+PRINT @explanation

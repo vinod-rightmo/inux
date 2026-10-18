@@ -1,24 +1,18 @@
-DO Resolve ticket_id, absolute project, private absolute ix/acli, and absolute assets under shared
-    Inux guidance from ../assets
-    beside this program. Let ix own directory/template validation, snapshots, and initialization
-    (plain directories supported; linked Git worktrees unsupported). No separate inspections,
-    listings/hashes, template reads/copies, or CLI/PR/conversion lookup; keep local steps quiet.
+DO Resolve the requested ticket ID, absolute project, private absolute ix and
+    acli executables, and the absolute ../assets directory beside this program.
+    Let ix own task validation, snapshots, and initialization. Plain directories
+    are supported; linked Git worktrees are not. Return an object with ticket_id,
+    project, ix, acli, and assets. AS context
 
-SHELL `{ix} task --snapshot {project}` AS snapshot_result
+RUN @context.ix task --snapshot @context.project AS snapshot_result
 
-SET state = JSON(stdout of snapshot_result)
+DO Parse @snapshot_result.stdout as JSON. Verify its state is ok and return its
+    opaque snapshot value. AS snapshot
 
-CHECK state is ok
+RUN @context.acli jira workitem view @context.ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json AS jira_result
 
-SET snapshot = snapshot of state
-
-SHELL `{acli} jira workitem view {ticket_id} --fields key,issuetype,summary,status,assignee,description,attachment --json` AS jira_result
-
-SET ticket = JSON(stdout of jira_result)
-
-CHECK key of ticket == ticket_id
-
-CHECK Requested ticket details are complete.
+DO Parse @jira_result.stdout as JSON. Verify its key equals @context.ticket_id
+    and the requested details are complete. Return the ticket object. AS ticket
 
 SET ticket_layout = """
 # TICKET-ID
@@ -41,21 +35,20 @@ Assignee: <assignee or None>
 - <filename> — <URL>
 """
 
-DO Prepare ticket_markdown in memory from ticket using ticket_layout: preserve full
-    descriptions/lists/tables and media links with supplied names/URLs. Keep unresolved references,
-    invent no mappings/criteria, and use None for absent values/attachments. Write nothing yet.
+DO Prepare ticket Markdown from @ticket using @ticket_layout. Preserve complete
+    descriptions, lists, tables, and media links with supplied names and URLs.
+    Keep unresolved references, invent no mappings or criteria, and use None for
+    absent values or attachments. Return only the Markdown string and write
+    nothing. AS ticket_markdown
 
-SHELL `{ix} task --expect {snapshot} {assets} {project}` AS workspace_result
+RUN @context.ix task --expect @snapshot @context.assets @context.project AS workspace_result
 
-SET workspace = JSON(stdout of workspace_result)
+DO Parse @workspace_result.stdout as JSON. Verify its state is ok and its files
+    list contains ticket.md, estimate.md, and pr.md. Return an object with
+    directory and the three absolute file paths. AS workspace
 
-CHECK workspace is ok
+DO Write @ticket_markdown only to the empty ticket.md under
+    @workspace.directory. Preserve Git exclusions and .gitignore. Do not copy,
+    reread, or perform extra filesystem checks.
 
-CHECK files of workspace lists ticket.md, estimate.md, and pr.md.
-
-SET directory = directory of workspace
-
-DO Write ticket_markdown to returned directory's empty ticket.md. CLI replacement plus write finish
-    the action; preserve Git exclusions/.gitignore, without copies/readback/final filesystem checks.
-
-PRINT with ticket_id and three absolute file paths, briefly.
+PRINT Report @context.ticket_id and @workspace's three absolute file paths briefly.

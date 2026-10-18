@@ -1,0 +1,92 @@
+IF @setup_complete == TRUE
+    PRINT Report the verified private tool versions, authentication states, and @host.bin.
+    RETURN "Setup already complete."
+
+IF @github.ready == FALSE
+    DO Select one GitHub CLI release metadata URL from @gh_releases_api. Append
+        /latest when @requested_gh_version is NULL. Otherwise normalize the
+        requested version to one v-prefixed tag, URL-encode it, and append
+        /tags/<tag>. Return the exact URL. AS gh_release_api
+
+    DO Install or upgrade GitHub CLI only at @host.gh. Read official release
+        metadata from @gh_release_api. Select the exact @host.os and @host.arch
+        archive and checksum, download into a unique private temporary directory,
+        verify the exact SHA-256 before extraction, and require the requested tag
+        when one was supplied.
+        Create @host.bin and missing parents only when required; track newly
+        created paths and remove any that remain empty before failing. Install
+        the executable with required permissions, verify its version, and remove
+        only the temporary directory before completing or failing. Preserve a
+        working existing tool until the replacement is verified. Return an object
+        with path, version, ready, and authenticated. AS github
+
+RUN @host.gh --version AS gh_version
+
+DO Verify @gh_version.stdout matches @github.version and @github.ready is TRUE.
+
+IF @github.authenticated == FALSE
+    PRINT "Complete GitHub browser approval when the CLI displays its login URL or device code."
+
+    DO Run @host.gh auth login --hostname github.com --web as one interactive
+        process and wait for it to finish. Keep gh-managed credentials and never
+        request or expose a token. Then run only the matching auth-status check.
+        Return @github updated with authenticated TRUE only after success. AS github
+
+IF @github.authenticated != TRUE
+    RETURN "Setup stopped because GitHub authentication is incomplete."
+
+IF @atlassian.ready == FALSE
+    DO Install or upgrade Atlassian CLI only at @host.acli. Inspect
+        @acli_source once, select the official supported binary for @host.os and
+        @host.arch, honor @requested_acli_version, and use a unique private
+        temporary directory. Verify the vendor's exact SHA-256 when published;
+        otherwise record that no checksum was available. Create @host.bin and
+        missing parents only when required; track newly created paths and remove
+        any that remain empty before failing. Install with required permissions,
+        verify the version, and remove only that temporary directory before
+        completing or failing. Preserve a working existing tool until the
+        replacement is verified. Return an object with path, version, ready,
+        authenticated, and checksum_status. AS atlassian
+
+RUN @host.acli --version AS acli_version
+
+DO Verify @acli_version.stdout matches @atlassian.version and @atlassian.ready is TRUE.
+
+IF @atlassian.authenticated == FALSE
+    PRINT "Complete Jira browser approval when the CLI displays its login URL."
+
+    DO Run @host.acli jira auth login --web as one interactive process and wait
+        for it to finish. Keep acli-managed credentials and never request or
+        expose a token. Then run only the matching auth-status check. Return
+        @atlassian updated with authenticated TRUE only after success. AS atlassian
+
+IF @atlassian.authenticated != TRUE
+    RETURN "Setup stopped because Jira authentication is incomplete."
+
+IF @inux.ready == FALSE
+    DO Install ix @host.tag from @repository only at @host.ix. Use the verified
+        private @host.gh executable to download the exact host asset and
+        checksums.txt into a unique private temporary directory. Select
+        ix-darwin-amd64, ix-darwin-arm64, ix-linux-amd64,
+        ix-linux-arm64, or ix-windows-amd64.exe as appropriate. Verify the exact
+        SHA-256 before installation. Create @host.bin and missing parents only
+        when required; track newly created paths and remove any that remain
+        empty before failing. Preserve a working existing ix until the
+        replacement is verified, set required permissions, confirm
+        @host.expected_version, run --help once, and remove only that temporary
+        directory before completing or failing. Return an object with path,
+        version, and ready. AS inux
+
+RUN @host.ix --version AS ix_version
+
+DO Verify @ix_version.stdout contains exactly @host.expected_version and @inux.ready is TRUE.
+
+RUN @host.ix --help AS ix_help
+
+DO Recompute setup completion from @github, @atlassian, and @inux. Return TRUE
+    only when all versions and both authentication checks are verified. AS setup_complete
+
+IF @setup_complete != TRUE
+    RETURN "Setup stopped because one or more required checks failed."
+
+PRINT Report @github, @atlassian, @inux, and @host.bin in a compact table. Include checksum limitations and no tokens.

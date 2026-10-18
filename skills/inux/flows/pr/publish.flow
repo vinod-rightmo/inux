@@ -1,164 +1,154 @@
-SET temp_dir = NULL
+IF @mode != "publish"
+    RETURN "PR publication was not selected."
 
-FINALLY:
-    IF temp_dir != NULL:
-        DO Remove this run's UTF-8 body file/temp directory only; report cleanup errors.
+PRINT """
+- [ ] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
 
-CHECK mode == "publish"
+DO Read @request and prior explicit choices for this PR. Return the explicitly
+    selected target branch or NULL. Never infer a target from defaults or
+    existing PRs. AS target
 
-CHECK The developer explicitly requested publishing this PR.
-
-PRINT
-    - [ ] Git validation
-    - [ ] Evidence/verification
-    - [ ] Save/publication
-DO Set target from this request/prior explicit choice for this PR, including pr [publish] target
-    BRANCH. Otherwise NULL; never infer from defaults/existing PR.
-
-IF target == NULL:
+IF @target == NULL
     ASK "Which destination branch should this PR target?" AS target
 
-CHECK target is nonempty and explicitly developer-selected.
+IF @target == ""
+    RETURN "PR publication requires an explicitly selected destination branch."
 
-DO Inspect branch/HEAD/remotes/operation state once; record current_branch, checked_head,
-    repository, push_remote, target_remote. Resolve merge/rebase/cherry-pick/revert markers
-    through Git for worktrees.
+USE validate.flow
 
-SHELL `git -C {project} status --porcelain=v1 --untracked-files=all --ignore-submodules=none` AS status_result
+PRINT """
+- [x] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
 
-CHECK Attached HEAD, clean index/tree including untracked/submodules, and no
-    merge/rebase/cherry-pick/revert.
+DO Read @ticket_path and @pr_path together. Return an object with the complete
+    ticket and exact saved_pr. AS documents
 
-SHELL `git -C {project} check-ref-format --branch {current_branch}` AS branch_format
+USE ../../references/technical-summary.md#summary-content AS summary_rules
 
-CHECK current_branch follows explicit naming rules/required validators; otherwise
-    <type>/<TICKET-ID>-<lowercase-kebab-description>, exact uppercase active ticket, type
-    feature/bugfix/hotfix/chore/refactor/perf/test/release, 1–6 lowercase letter/digit
-    description words separated by single hyphens. Count description words only; no ix/generated
-    validator.
+DO Verify @documents.saved_pr has @ticket_id, one complete single-line title,
+    and a placeholder-free Description satisfying @summary_rules. Do not draft
+    or rewrite invalid content.
 
-DO Fetch selected target ref from target_remote; record target_ref (TARGET_REF) and
-    target_revision. No fallback base/ref; require shared ancestry, not target ancestry.
+RUN git -C @project diff --find-renames @merge_base @checked_head AS diff_result
 
-CHECK current_branch is a task branch distinct from target.
+DO Review @diff_result.stdout and relevant code read-only. Verify
+    @checked_messages and @documents.saved_pr against implementation evidence.
+    Follow exact imports or symbols into direct dependencies only for material
+    gaps. Return an object with evidence, material_concerns, and observed_checks. AS review
 
-SHELL `git -C {project} merge-base {target_ref} HEAD` AS merge_base_result
+DO Run only missing project-required checks for the current code and inputs,
+    reusing unchanged observed results. Inspect one targeted manifest or
+    Makefile only when needed. Probe runtime health only after an actual failure.
+    Retain every exit and never mask failures. Return the verification results. AS verification
 
-SET merge_base = trim(stdout of merge_base_result)
+DO Verify @review has no unresolved material correctness concern, @verification
+    passed all required checks, @checked_messages and @documents.saved_pr agree
+    with the full diff, and the ticket work is complete.
 
-CHECK merge_base is not empty
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [ ] Save/publication
+"""
 
-DO Set commit_range to target_ref followed by ..HEAD; retain the same TARGET_REF.
+DO Resolve the private absolute gh executable. Report a missing tool without
+    setup, login, or version probes. Return an object with gh. AS tools
 
-SHELL `git -C {project} log --reverse --format='%H%n%B%x00' {commit_range}` AS commits_result
+RUN @tools.gh auth status AS authentication
 
-DO Retain all SHAs/full messages from commits_result as checked_messages, including merges; no
-    author/ticket filtering or inherited-target checks. Preserve whitespace; only record
-    separators/one terminal LF are not bodies. No other trimming, reconstruction, or per-commit
-    rereads.
+RUN @tools.gh pr list --repo @repository --head @current_branch --state open --json "url,baseRefName,headRefName,title,isDraft,assignees,reviewRequests" AS pr_list_result
 
-CHECK The PR commit range is nonempty.
+RUN @tools.gh api user --jq .login AS user_result
 
-CHECK Every message follows explicit naming rules/required validators; otherwise one line
-    <TICKET-ID>: <Capitalized present-tense summary>, exact ticket once, colon plus one space,
-    meaningful uppercase-start summary, no bodies/extra prefixes/duplicate tickets.
-    Add/Fix/Update/Remove are examples, not a closed list. Report failing SHAs/rules; no
-    ix/generated validator.
+DO Parse @pr_list_result.stdout and @user_result.stdout. Return an object with
+    candidate_prs containing every inspected PR URL, target, and head;
+    pr_choice_is_clear; existing_pr_url only when zero or one candidate makes
+    the choice unambiguous; authenticated_user; target set to @target; and
+    target_changed set to FALSE. Multiple existing PRs or a differing existing
+    target makes the choice unclear. AS publication_state
 
-DO Retain branch, checked_head, target_revision, merge_base, checked_messages, and gate results.
-
-PRINT
-    - [x] Git validation
-    - [ ] Evidence/verification
-    - [ ] Save/publication
-DO Read full ticket.md/pr.md together; retain exact saved_pr.
-
-CHECK saved_pr has matching ticket, complete single-line Title, and placeholder-free
-    Description satisfying ../../references/technical-summary.md#summary-content. Request
-    preparation/refinement if incomplete; never draft here.
-
-DO Review full merge-base-to-checked_head diff/code read-only; verify message accuracy. For
-    material gaps, name the missing fact, follow exact imports/symbols into direct dependencies,
-    and read relevant ranges. Stop once claims are supported; intent/messages are not
-    implementation proof. Retain evidence.
-
-CHECK Saved summary/messages agree with full diff/evidence; report stale content without
-    edits.
-
-DO Run missing project checks for current code/inputs, reusing unchanged observed results; one
-    targeted manifest/Makefile lookup if needed. Probe runtime health only on actual failure;
-    request host access on first use. Retain all exits; never mask failures with ||
-    true/trailing commands.
-
-CHECK Ticket work complete, messages/summary accurate, no material correctness concerns, and
-    required checks passed.
-
-PRINT
-    - [x] Git validation
-    - [x] Evidence/verification
-    - [ ] Save/publication
-DO Resolve private absolute gh; report missing tools without setup/login/version probes.
-
-SHELL `{gh} auth status` AS authentication
-
-DO With private gh --repo repository, inspect exact repository/head open PRs; record Boolean
-    pr_choice_is_clear, existing_pr or NULL, and authenticated_user. Clarify differing
-    targets before mutation.
-
-IF pr_choice_is_clear == FALSE:
+IF @publication_state.pr_choice_is_clear == FALSE
     ASK "Clarify the existing PR to update and any differing target before publication:" AS pr_choice
 
-    DO Resolve existing_pr/explicit target from pr_choice; update pr_choice_is_clear and
-        revalidate affected gate/diff/checks.
+    DO Resolve only an explicit existing PR URL and explicit destination branch
+        from @pr_choice and @publication_state. Require the selected URL to match
+        exactly one member of @publication_state.candidate_prs for @repository
+        and @current_branch; never infer either value. Return an object retaining
+        candidate_prs with pr_choice_is_clear, existing_pr_url or NULL,
+        authenticated_user, target, and target_changed. AS publication_state
 
-CHECK pr_choice_is_clear == TRUE
+IF @publication_state.pr_choice_is_clear != TRUE
+    RETURN "PR publication stopped because the existing PR choice is unclear."
 
-DO Extract title and description only from saved_pr; preserve Description Markdown exactly.
+SET existing_pr_url = @publication_state.existing_pr_url
+SET authenticated_user = @publication_state.authenticated_user
+SET target = @publication_state.target
 
-DO Track unique temp_dir before writing absolute UTF-8 body_file containing only
-    description.
+IF @target == ""
+    RETURN "PR publication stopped because the destination branch is empty."
 
-DO Immediately before save/publish, recheck branch/HEAD/TARGET_REF revision/ticket/operation
-    state/full index/tree; compare saved_pr on publish. Revalidate only changed dependencies and
-    update retained evidence/checked_head.
+IF @publication_state.target_changed == TRUE
+    USE validate.flow
 
-CHECK Current state matches verified gate/diff/implementation/checks; active ticket matches
-    ticket_id, HEAD attached, tree clean, no active operation.
+    RUN git -C @project diff --find-renames @merge_base @checked_head AS diff_result
 
-CHECK Draft equals saved_pr and remains valid for checked state/explicit target.
+    DO Review @diff_result.stdout and relevant code read-only. Verify
+        @checked_messages and @documents.saved_pr against implementation evidence.
+        Follow exact imports or symbols into direct dependencies only for material
+        gaps. Return an object with evidence, material_concerns, and observed_checks. AS review
 
-DO Push current_branch to push_remote without force, using separate literal arguments.
+    DO Run only missing project-required checks for the current code and inputs,
+        reusing unchanged observed results only when still valid for the new target.
+        Inspect one targeted manifest or Makefile only when needed. Probe runtime
+        health only after an actual failure. Retain every exit and never mask
+        failures. Return the verification results. AS verification
 
-DO Read pushed branch SHA as remote_head.
+    DO Verify @review has no unresolved material correctness concern, @verification
+        passed all required checks, @checked_messages and @documents.saved_pr agree
+        with the full diff, and the ticket work is complete.
 
-CHECK remote_head == checked_head
+DO Extract only title and Description from @documents.saved_pr, preserving
+    Description Markdown exactly. Return an object with title and description. AS draft_fields
 
-IF existing_pr == NULL:
-    SHELL `{gh} pr create --repo {repository} --base {target} --head {current_branch} --draft --assignee {authenticated_user} --title {title} --body-file {body_file}` AS creation
+DO Immediately re-read branch, HEAD, @target_ref revision, active ticket, Git
+    operation state, full index and tree, and @pr_path. Revalidate only changed
+    dependencies. Verify they still match @checked_head, @target_revision,
+    @ticket_id, @documents.saved_pr, @review, and @verification. AS final_gate
 
-    SET pr_url = trim(stdout of creation)
+RUN git -C @project push @push_remote @current_branch AS push_result
 
-ELSE:
-    DO Edit existing_pr with private gh: explicit --repo repository, selected base, title,
-        body_file, --add-assignee authenticated_user; preserve other assignees/reviewers/PR
-        state.
+RUN git -C @project ls-remote @push_remote @current_branch AS remote_result
 
-    DO Retain existing_pr URL as pr_url before review request for partial-success reporting.
+DO Parse @remote_result.stdout and verify the pushed branch SHA equals @checked_head.
 
-SHELL `{gh} pr edit {pr_url} --repo {repository} --add-reviewer "@copilot"` AS reviewer_result
+IF @existing_pr_url == NULL
+    RUN @tools.gh pr create --repo @repository --base @target --head @current_branch --draft --assignee @authenticated_user --title @draft_fields.title --body @draft_fields.description AS creation
 
-DO Inspect PR assignees/Copilot review evidence; retain verified URL, publication state, and
-    partial success.
+    DO Trim @creation.stdout and return the verified PR URL. AS pr_url
+ELSE
+    RUN @tools.gh pr edit @existing_pr_url --repo @repository --base @target --title @draft_fields.title --body @draft_fields.description --add-assignee @authenticated_user AS edit_result
 
-CHECK authenticated_user assigned; Copilot review request accepted or already recorded.
+    SET pr_url = @existing_pr_url
 
-DO Attach verified PR URL to this chat when supported.
+RUN @tools.gh pr edit @pr_url --repo @repository --add-reviewer "@copilot" AS reviewer_result
 
-PRINT
-    - [x] Git validation
-    - [x] Evidence/verification
-    - [x] Save/publication
+RUN @tools.gh pr view @pr_url --repo @repository --json "url,state,isDraft,assignees,reviewRequests" AS published_state_result
 
-PRINT with changed path/observed checks, verified PR URL/state or requested explanation,
-    blockers/gaps, and partial success; briefly. Keep checklists in chat, preserve pr.md on publish,
-    and inspect remote state before uncertain-write retries.
+DO Parse @published_state_result.stdout. Verify @authenticated_user
+    is assigned and the Copilot review request is accepted or already recorded.
+    Return the verified URL and publication state. AS publication
+
+DO Attach @publication.url to this chat when the host supports PR artifacts.
+
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [x] Save/publication
+"""
+
+PRINT Report @publication, @review.observed_checks, blockers, gaps, and partial success briefly.

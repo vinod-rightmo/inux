@@ -38,8 +38,12 @@ Open a new conversation in Codex or Cursor and run:
 /inux setup
 ```
 
-Setup installs or checks `ix`, `gh`, and `acli` in `~/.inux/tools/bin/`,
-checks authentication, and cleans up its temporary downloads.
+Setup installs tools privately in `~/.inux/tools/bin/`: `ix` matches the Inux
+version; missing `gh` and `acli` use the latest supported vendor versions.
+Working tools are reused. The agent guides GitHub and Jira browser login,
+verifies authentication, and cleans up temporary files. Browser login runs as
+one interactive process and waits for completion. `ix` installs only after
+GitHub authentication succeeds so the private release assets are accessible.
 
 **3. Start a task**
 
