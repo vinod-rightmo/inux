@@ -8,10 +8,30 @@ DO Verify @context has an attached HEAD, no unresolved conflicts, and no active
 IF @context.changes_present == FALSE
     RETURN "There are no changes to commit."
 
-DO Read @context.project/.inux/ticket.md in full. Return an object with ticket_id
-    from its first heading and ticket content. AS ticket
+DO Resolve the absolute project and active Jira ticket ID from the explicit
+    request or this conversation's task context. Reject a supplied-ID mismatch
+    with the active task. Do not infer a task from a temporary filename or search
+    for task files. Return an object with project, ticket_id (NULL if unknown),
+    and ticket containing the complete previously loaded Jira object or NULL. AS task_context
 
-DO Verify @ticket.ticket_id is valid, any supplied ID matches it, and
+IF @task_context.ticket_id == NULL
+    ASK "Which Jira ticket should this work use?" AS ticket_input
+
+    DO Validate @ticket_input as one Jira ticket ID and return @task_context
+        with that ticket_id. AS task_context
+
+SET project = @task_context.project
+SET ticket_id = @task_context.ticket_id
+SET ticket = @task_context.ticket
+
+DO Verify any available @ticket identifies @ticket_id and retain @project,
+    @ticket_id, and any complete ticket as this conversation's active task.
+    Resolve identity locally; do not call Jira or write task files.
+
+IF @ticket == NULL
+    RETURN "Commit requires complete ticket context. Load it with /inux task <id>, then retry."
+
+DO Verify @ticket_id is valid, any supplied ID matches it, and
     @context.branch contains the exact case-sensitive ticket token without
     making it part of a longer ID.
 
@@ -35,7 +55,7 @@ DO Verify @scope excludes unrelated staged changes and unintended secrets or
 DO Group @scope.selected changes by purpose, with dependencies first. Draft one
     commit for related changes and separate commits for independent purposes.
     Every message must be one line <TICKET-ID>: <Capitalized present-tense
-    summary> using @ticket.ticket_id exactly once, followed by colon and one
+    summary> using @ticket_id exactly once, followed by colon and one
     space, with no body or extra prefix. Return an object with ordered groups
     and commit_count. AS commit_plan
 
@@ -50,19 +70,21 @@ SET completed_commits = []
 
 REPEAT @commit_plan.commit_count TIMES
     DO Select the group at @commit_index from @commit_plan.groups. Re-read the
-        active ticket ID and branch and verify both still match @ticket.ticket_id
+        active ticket ID and branch and verify both still match @ticket_id
         and @context.branch. Return the selected group with message, paths, and
         hunks. AS group
 
     DO Stage only @group.paths and @group.hunks. Preserve partial staging and
         unrelated work and index entries. Fail if safe separation is impossible.
 
-    RUN git -C @context.project diff --cached --check AS staged_check
+    RUN git -C @context.project diff --cached --check
+    AS staged_check
 
     DO Read the full staged diff. Verify it is nonempty, exactly @group,
         covered by @verification, and accurately described by @group.message.
 
-    RUN git -C @context.project commit -m @group.message AS commit_result
+    RUN git -C @context.project commit -m @group.message
+    AS commit_result
 
     DO Read the created commit SHA and remaining status. Append an object with
         the SHA and @group.message to @completed_commits and return the updated

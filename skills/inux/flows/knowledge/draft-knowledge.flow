@@ -1,0 +1,23 @@
+CONTEXT
+    Select only the exact path supplied by the user or recorded in this conversation
+    for the canonical project, Jira ticket, and draft kind. Reject mismatches or
+    ambiguous selection; never scan temporary directories or infer a ticket from a
+    filename. Ask for missing selection details. Read developer edits on every action.
+    Writing may create a new draft only when none is known; a known missing file is
+    an error. Refine, improve, explain, publish, and done require an existing draft.
+
+    Create only the requested pr.md or technical-summary.md in a unique private OS
+    temporary directory outside the canonical project, resolving paths and symlinks.
+    Use 0700 directory and 0600 file permissions where supported. Allocate only when
+    the draft is ready. Record the absolute path, project, ticket, kind, and directory
+    ownership in conversation context. Create no repository task files or registry.
+    Before saving or publishing, verify task identity and the current file still
+    match the identity and text read for this action. Stop on concurrent edits.
+
+    Keep Markdown after writing and failed or uncertain publication. After verified
+    publication, remove only the selected file if it still matches the published text.
+    Explicit done may remove an incomplete selected draft without publishing or Jira,
+    Git readiness, or tool checks. Never follow links. Remove only an empty directory
+    owned by this workflow; forget only the cleaned record. Preserve other drafts and
+    report cleanup failures or retained paths. A new task does not clean old drafts.
+AS draft_rules

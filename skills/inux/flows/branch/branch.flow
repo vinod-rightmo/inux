@@ -15,8 +15,8 @@ DO Use the supplied name or derive a concise task branch name under
     <type>/<TICKET-ID>-<lowercase-kebab-description> with the exact uppercase
     active ticket, type feature/bugfix/hotfix/chore/refactor/perf/test/release,
     and 1–6 lowercase letter or digit description words. Count description
-    words only. Map Bug to bugfix and Story or new capability to feature. Read
-    only .inux/ticket.md's heading, Type, and Summary when needed. Return an
+    words only. Map Bug to bugfix and Story or new capability to feature. Reuse
+    only the active ticket ID, type, and summary from conversation context when needed. Return an
     object with name, naming_ready, and missing_facts. AS naming
 
 IF @naming.naming_ready == FALSE
@@ -33,9 +33,11 @@ DO Choose @context.start_ref when non-NULL, otherwise @git_state.current_branch.
     uncommitted changes and do not stash, reset, or discard them. Return the
     branch name. AS parent_branch
 
-RUN git -C @context.project switch @parent_branch AS switch_result
+RUN git -C @context.project switch @parent_branch
+AS switch_result
 
-RUN git -C @context.project -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only AS pull_result
+RUN git -C @context.project -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only
+AS pull_result
 
 DO Compare @naming.name with local branches and known remote-tracking branches
     without fetching. Return TRUE when the name already exists, otherwise FALSE. AS branch_exists
@@ -49,6 +51,7 @@ IF @branch_exists == TRUE
 DO Verify @naming.name is unused, follows @context.naming_rules, and any supplied
     ticket matches the active ticket. Do not use ix or a generated validator.
 
-RUN git -C @context.project switch -c @naming.name AS creation
+RUN git -C @context.project switch -c @naming.name
+AS creation
 
 PRINT Report @naming.name and @creation briefly without reinspection.

@@ -1,0 +1,10 @@
+CONTEXT
+    Use private absolute gh, acli, and ix executables under <storage>/tools/bin;
+    storage defaults to <user-home>/.inux. Honor an explicit storage override and
+    use .exe on Windows. Outside setup, report missing tools without installing,
+    logging in, or probing versions. For Jira network calls, request host-approved
+    outside-sandbox execution on the first attempt; in Cursor Shell include
+    required_permissions: ["all"]. Stop if unavailable or denied. Process errors
+    and uncertain writes stop dependent work. Inspect remote state before retrying
+    an uncertain publication. Use Git directly with the selected absolute project.
+AS tool_guidance

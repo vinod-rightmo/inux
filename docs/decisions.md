@@ -1,5 +1,20 @@
 # Implementation decisions
 
+## 2026-10-20: Keep editable drafts outside the repository
+
+**Decision:** Task loading keeps Jira details in conversation context. Create
+only the requested estimate, PR, or technical-summary Markdown draft in a unique
+private OS temporary directory outside the repository. Developers can edit it
+directly or with the agent. Reuse its exact path for the same project, ticket,
+and draft kind. Remove the selected file after verified publication or explicit
+completion; retain it when publication fails or its outcome is uncertain.
+
+**Reason:** The agent already manages Markdown editing and publication. Removing
+the repository task directory also removes ix task initialization, workspace
+snapshots, template copying, and Git exclusion logic. ix retains ADF conversion
+and version reporting. This supersedes the task-file layout decision below;
+existing user task folders are left untouched.
+
 ## 2026-10-14: Install Inux tools in private storage
 
 **Problem:** `/inux setup` attempted to install Atlassian CLI with Homebrew,
@@ -22,7 +37,7 @@ sudo, and links to externally managed binaries are excluded from this workflow.
 across machines and operating systems, avoids global package-manager changes,
 and keeps the tools used by the skill independent of unrelated PATH versions.
 
-**Changed files:** [setup reference](../skills/inux/flows/setup.flow) and
+**Changed files:** [setup reference](../skills/inux/flows/setup/setup.flow) and
 [skill entry point](../skills/inux/SKILL.md). The correction applies to local
 Codex and Cursor installations as well as the repository source. It does not
 change the CLI commands or require a new tool download when a private copy works.

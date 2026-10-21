@@ -1,0 +1,103 @@
+CONTEXT
+    # <TICKET-ID>
+
+    Branch name:
+    `<branch-name>`
+
+    Implementation Summary:
+
+    - Fix / implementation: <short paragraph: what now happens when the user acts, a brief example when useful, then how the app makes it happen; simple sentences in event order>
+    - Root cause: <short paragraph: what the app did before, the missing or incorrect action, and the problem the user saw; simple sentences in event order, or None>
+
+    Code Layer Impact:
+
+    - Impacted services: <repository names without owner/organization prefixes, or None>
+    - Core modules/sections: <affected modules or sections>
+
+    UI Impact:
+
+    - New/updated components, layouts, or pages: <affected UI or None>
+
+    DB Impact:
+
+    - New/updated tables: <affected tables or None>
+    - Indexing added/updated: <affected indexes or None>
+
+    Infra Impact:
+
+    - Env changes: <environment changes or None>
+    - Cloudflare/S3/Redis or other infra changes: <infrastructure changes or None>
+AS summary_template
+
+USE ../knowledge/summary-knowledge.flow
+USE ../knowledge/common-knowledge.flow
+USE ../knowledge/draft-knowledge.flow
+
+DO Resolve the explicit project or current checkout and active ticket from
+    @request or conversation. Reject supplied-ID mismatches. Return an object
+    with project, ticket_id (NULL if unknown), and ticket (complete matching
+    cached Jira object or NULL). AS task_context
+
+IF @task_context.ticket_id == NULL
+    ASK "Which Jira ticket should this work use?" AS ticket_input
+    DO Validate @ticket_input against the active task and return @task_context
+        updated with that one Jira ID. AS task_context
+
+SET project = @task_context.project
+SET ticket_id = @task_context.ticket_id
+SET ticket = @task_context.ticket
+
+DO Retain the verified project, ticket ID, and any complete cached ticket as
+    this conversation's active task without remote calls or task files.
+
+DO Resolve and read the technical-summary.md draft for @project and @ticket_id under
+    @draft_rules. Allow a new draft only when none is known.
+    Return an object with path and text (both NULL for a new draft). AS draft_state
+
+SET draft_path = @draft_state.path
+SET saved_draft = @draft_state.text
+
+IF @ticket == NULL
+    USE ../knowledge/tool-knowledge.flow
+    DO Resolve private absolute acli using @tool_guidance. Return its path. AS acli
+    RUN @acli jira workitem view @ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json
+    AS ticket_result
+    DO Parse @ticket_result.stdout as JSON, verify its key equals @ticket_id and
+        requested details are complete, and retain the full ticket and project.
+        Return the complete object. AS ticket
+
+DO Inspect branch and HEAD in @project before reusing earlier code evidence. Resolve the
+    requested implementation scope. Return an object with scope and
+    scope_is_clear. Wording edits need no code investigation. AS scope_state
+
+IF @scope_state.scope_is_clear == FALSE
+    ASK "Which changes or commit range should this technical summary cover?" AS summary_scope
+
+    DO Resolve @summary_scope into a valid implementation scope. Return an
+        object with scope and scope_is_clear. AS scope_state
+
+    IF @scope_state.scope_is_clear == FALSE
+        RETURN "Technical-summary generation stopped because the scope is unclear."
+
+DO Review relevant local changes or the explicitly identified commit range in
+    @scope_state.scope. Follow exact imports or symbols only for material gaps.
+    Do not choose a PR target, fetch, require a clean tree, create commits, or
+    run tests solely to write prose. Distinguish observed checks from proposed
+    verification. Return the evidence and material uncertainty. AS evidence
+
+DO Prepare the summary from @summary_template using @ticket, @saved_draft,
+    @evidence, @writing_guidance, and @summary_rules. A new draft has a # TICKET-ID
+    heading and the summary body, without PR title or Description headings.
+    Preserve an existing draft's layout, accurate notes, and unrequested content.
+    Return an object with draft and unrelated_gaps. AS summary_draft
+
+DO Verify the requested content in @summary_draft.draft is supported, complete,
+    and placeholder-free while preserving accurate developer judgments.
+
+DO Save @summary_draft.draft to the technical-summary draft under @draft_rules,
+    using @draft_path when present and @saved_draft as the concurrent-edit
+    baseline. Verify the active project and ticket still match @project and
+    @ticket_id. For a new file allocate only its unique external temporary
+    directory. Verify the saved content once and return the absolute path. AS draft_path
+
+PRINT Report @draft_path, @evidence, and @summary_draft.unrelated_gaps briefly.

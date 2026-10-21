@@ -1,0 +1,32 @@
+DO Infer the intention after /inux pr or the equivalent plain-language PR request
+    without inspecting project or tools.
+    Return an object with unchanged request and mode: "prepare" for creating/drafting, including
+    a target-only request; "refine" for title/description edits; "explain";
+    "publish" only for explicit publication; or "done" for finishing/discarding
+    without publication. Use NULL for missing, unsupported, conflicting, or
+    ambiguous requests. AS route
+
+SET request = @route.request
+SET mode = @route.mode
+
+IF @mode == "prepare"
+    USE pr-prepare.flow
+    RETURN
+
+IF @mode == "refine"
+    USE pr-refine.flow
+    RETURN
+
+IF @mode == "explain"
+    USE pr-explain.flow
+    RETURN
+
+IF @mode == "publish"
+    USE pr-publish.flow
+    RETURN
+
+IF @mode == "done"
+    USE pr-done.flow
+    RETURN
+
+RETURN "Usage: /inux pr [request]. Request prepare, refine, explain, publish, or done."

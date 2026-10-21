@@ -18,7 +18,7 @@
         },
         {
           "type": "generic",
-          "path": "skills/inux/flows/setup.flow"
+          "path": "skills/inux/flows/setup/setup-ix.flow"
         }
       ]
     }

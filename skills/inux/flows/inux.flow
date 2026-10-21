@@ -1,0 +1,40 @@
+DO Identify the requested Inux command without inspecting the project or tools.
+    Accept /inux commands and equivalent plain language. Return help, setup,
+    task, branch_create, commit_changes, estimate, ts, or pr; technical summary
+    is an alias for ts. Leave the full request unchanged for the selected
+    workflow, including missing or conflicting action requests. Return NULL
+    when the command itself is unsupported, conflicting, or ambiguous. AS command
+
+IF @command == "help"
+    USE help.flow
+    RETURN
+
+IF @command == "setup"
+    USE setup/setup.flow
+    RETURN
+
+IF @command == "task"
+    USE task.flow
+    RETURN
+
+IF @command == "branch_create"
+    USE branch/branch.flow
+    RETURN
+
+IF @command == "commit_changes"
+    USE commit/commit.flow
+    RETURN
+
+IF @command == "estimate"
+    USE estimate/estimate.flow
+    RETURN
+
+IF @command == "ts"
+    USE ts/ts.flow
+    RETURN
+
+IF @command == "pr"
+    USE pr/pr.flow
+    RETURN
+
+RETURN "Usage: /inux help, setup, task <id>, branch create, commit changes, estimate [request], ts [request], technical summary [request], or pr [request]."

@@ -1,9 +1,0 @@
-IF @mode != "explain"
-    RETURN "Estimate explanation was not selected."
-
-DO Explain @saved_estimate using current evidence. Inspect only material gaps,
-    flag contradictions, and do not edit or publish. Return a concise report
-    containing @ticket_id, the saved SP, the file or verified URL, assumptions,
-    unrelated gaps, justified SP changes, and the requested explanation. AS explanation
-
-PRINT @explanation

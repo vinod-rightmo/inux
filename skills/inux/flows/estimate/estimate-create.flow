@@ -1,0 +1,11 @@
+USE estimate-template.flow
+USE estimate-draft-rules.flow
+
+DO Create and verify a fresh estimate.md from @estimate_template under
+    @draft_rules. Use the project and any ticket from @request or known task
+    context; no ticket lookup is required. Leave template values empty.
+    Return the absolute path. AS draft_path
+
+DO Open @draft_path in the host editor or preview when available.
+
+PRINT "Empty estimate template:" @draft_path
