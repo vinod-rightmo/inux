@@ -1,0 +1,28 @@
+CONTEXT
+    Preparation and publication require an attached HEAD, a fully clean index and
+    tree including untracked files and submodules, and no merge, rebase, cherry-pick,
+    or revert. Resolve operation markers through Git for worktrees. The task branch
+    must pass Git branch-ref validation, contain the exact active ticket token, and
+    differ from the explicitly selected destination branch. Follow current project
+    AGENTS.md and explicit user naming overrides, not old conversation conventions.
+    Without an override use <type>/<TICKET-ID>-<lowercase-kebab-description>, with
+    feature/bugfix/hotfix/chore/refactor/perf/test/release and 1–6 description words.
+
+    Resolve the correct push and destination remotes. Fetch only the explicitly
+    selected target from its destination remote, record its exact ref and revision,
+    and find its merge base with HEAD. No fallback target or unrelated base is allowed;
+    missing shared ancestry fails. The target_ref..HEAD range must be nonempty. Check
+    every SHA and full commit message, including merges. Preserve message whitespace
+    except record separators and one terminal newline. Follow project commit rules;
+    otherwise require one <TICKET-ID>: <Capitalized present-tense summary> line with
+    the exact ticket once and no body or extra prefix. Use no generated validator.
+
+    Review the complete merge-base-to-HEAD diff and verify messages and draft claims
+    against implementation. Follow exact imports or symbols only for material gaps.
+    Run only missing project-required checks for unchanged code and inputs, preserving
+    all exits and never masking failures. Inspect a targeted manifest/Makefile only
+    when needed; probe runtime health only after an actual failure. All required
+    checks must pass, material correctness concerns must be resolved, and ticket work
+    must be complete. Recheck branch, HEAD, target revision, task, Git operation state,
+    full index/tree, and saved draft immediately before saving or publication.
+AS git_rules

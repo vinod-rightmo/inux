@@ -1,0 +1,27 @@
+DO Infer the intention from the sentence after /inux estimate or the equivalent
+    plain-language estimate request. Return an object
+    with unchanged request and mode: "create" for an empty template (the default
+    without a sentence), "improve" for requested edits, "generate" for a complete
+    estimate, or "publish" for explicit Jira publication. Use NULL for unsupported,
+    conflicting, or ambiguous requests. Do not inspect the project or tools. AS route
+
+SET request = @route.request
+SET mode = @route.mode
+
+IF @mode == "create"
+    USE estimate-create.flow
+    RETURN
+
+IF @mode == "improve"
+    USE estimate-improve.flow
+    RETURN
+
+IF @mode == "generate"
+    USE estimate-generate.flow
+    RETURN
+
+IF @mode == "publish"
+    USE estimate-publish.flow
+    RETURN
+
+RETURN "Usage: /inux estimate [request]. Create an empty template, improve it, generate a complete estimate, or publish to Jira."

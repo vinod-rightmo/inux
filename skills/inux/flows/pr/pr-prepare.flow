@@ -1,0 +1,165 @@
+CONTEXT
+    # Pull Request
+
+    ## Title
+
+    <TICKET-ID>: <Capitalized action summary>
+
+    ## Description
+
+    Branch name:
+    `<branch-name>`
+
+    Implementation Summary:
+
+    - Fix / implementation: <short paragraph: what now happens when the user acts, a brief example when useful, then how the app makes it happen; simple sentences in event order>
+    - Root cause: <short paragraph: what the app did before, the missing or incorrect action, and the problem the user saw; simple sentences in event order, or None>
+
+    Code Layer Impact:
+
+    - Impacted services: <repository names without owner/organization prefixes, or None>
+    - Core modules/sections: <affected modules or sections>
+
+    UI Impact:
+
+    - New/updated components, layouts, or pages: <affected UI or None>
+
+    DB Impact:
+
+    - New/updated tables: <affected tables or None>
+    - Indexing added/updated: <affected indexes or None>
+
+    Infra Impact:
+
+    - Env changes: <environment changes or None>
+    - Cloudflare/S3/Redis or other infra changes: <infrastructure changes or None>
+AS pr_template
+
+USE ../knowledge/summary-knowledge.flow
+USE ../knowledge/common-knowledge.flow
+USE ../knowledge/draft-knowledge.flow
+USE pr-git-rules.flow
+
+DO Resolve the explicit project or current checkout and active ticket from
+    @request or conversation. Reject supplied-ID mismatches. Return an object
+    with project, ticket_id (NULL if unknown), and ticket (complete matching
+    cached Jira object or NULL). AS task_context
+
+IF @task_context.ticket_id == NULL
+    ASK "Which Jira ticket should this work use?" AS ticket_input
+    DO Validate @ticket_input against the active task and return @task_context
+        updated with that one Jira ID. AS task_context
+
+SET project = @task_context.project
+SET ticket_id = @task_context.ticket_id
+SET ticket = @task_context.ticket
+
+DO Retain the verified project, ticket ID, and any complete cached ticket as
+    this conversation's active task without remote calls or task files.
+
+DO Resolve and read the pr.md draft for @project and @ticket_id under
+    @draft_rules. Allow a new draft only when none is known.
+    Return an object with path and text (both NULL for a new draft). AS draft_state
+
+SET draft_path = @draft_state.path
+SET saved_draft = @draft_state.text
+
+DO Read applicable project AGENTS.md and explicit user naming overrides.
+    Current rules take precedence over old conversation conventions. AS project_rules
+
+IF @ticket == NULL
+    USE ../knowledge/tool-knowledge.flow
+    DO Resolve private absolute acli using @tool_guidance. Return its path. AS acli
+    RUN @acli jira workitem view @ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json
+    AS ticket_result
+    DO Parse @ticket_result.stdout as JSON, verify its key equals @ticket_id and
+        requested details are complete, and retain the full ticket and project.
+        Return the complete object. AS ticket
+
+PRINT """
+- [ ] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
+
+DO Read @request and prior explicit choices for this PR. Return the explicitly
+    selected target branch, including a target-only request, or NULL. Never
+    infer a target from defaults or existing PRs. AS target
+
+IF @target == NULL
+    ASK "Which destination branch should this PR target?" AS target
+
+IF @target == ""
+    RETURN "PR preparation requires an explicitly selected destination branch."
+
+DO Validate @project for explicit @target and @ticket_id under @git_rules and
+    @project_rules. Inspect branch, HEAD, remotes, full status, and Git operation
+    state; fetch the selected target and resolve its exact revision and merge base.
+    Return an object with current_branch, checked_head, repository, push_remote,
+    target_remote, target_ref, target_revision, merge_base, and commit_range
+    containing the literal target_ref..HEAD range. AS git_state
+
+RUN git -C @project log --reverse "--format=%H%n%B%x00" @git_state.commit_range
+AS commits_result
+
+DO Parse every SHA and full message from @commits_result.stdout, including merges.
+    Preserve whitespace except separators and one terminal newline. Verify the
+    nonempty range and all messages against @git_rules and @project_rules for
+    @ticket_id. Return ordered messages and SHAs. AS checked_messages
+
+PRINT """
+- [x] Git validation
+- [ ] Evidence/verification
+- [ ] Save/publication
+"""
+
+DO Use @ticket and @saved_draft. Return an object with the complete ticket,
+    saved_pr (NULL for a new draft), and unrequested PR sections to preserve. AS documents
+
+RUN git -C @project diff --find-renames @git_state.merge_base @git_state.checked_head
+AS diff_result
+
+DO Review @diff_result.stdout and relevant code read-only. Verify
+    @checked_messages against implementation evidence. Follow exact imports or
+    symbols into direct dependencies only for material gaps and stop once claims
+    are supported. Return an object with evidence, material_concerns, and
+    observed_checks. Intent and messages are not implementation proof. AS review
+
+DO Compose an in-memory PR draft from @documents, @review, @writing_guidance,
+    @summary_rules, and @pr_template. Preserve accurate developer notes, labels,
+    order, and unrequested sections. Default the title to one concise
+    <TICKET-ID>: <Capitalized action summary> line unless explicitly overridden.
+    Return only the completed draft. AS draft
+
+DO Run only missing project-required checks for the current code and inputs,
+    reusing unchanged observed results. Inspect one targeted manifest or
+    Makefile only when needed. Probe runtime health only after an actual failure.
+    Retain every exit and never mask failures. Return the verification results. AS verification
+
+DO Verify @review has no unresolved material correctness concern, @verification
+    passed all required checks, @checked_messages and @draft are accurate, and
+    the ticket work is complete.
+
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [ ] Save/publication
+"""
+
+DO Immediately re-read branch, HEAD, @git_state.target_ref revision, active task context, Git
+    operation state, and the full index and tree. Revalidate only changed
+    dependencies. Verify they still match @git_state.checked_head, @git_state.target_revision,
+    @ticket_id, @review, and @verification. AS final_gate
+
+DO Save @draft to the PR draft under @draft_rules, using @draft_path when
+    present and @saved_draft as the concurrent-edit baseline. For a new file
+    allocate only its unique external temporary directory. Return the absolute
+    saved path without pushing or publishing. AS draft_path
+
+PRINT """
+- [x] Git validation
+- [x] Evidence/verification
+- [x] Save/publication
+"""
+
+PRINT Report @draft_path, @review.observed_checks, blockers, gaps, and partial success briefly.

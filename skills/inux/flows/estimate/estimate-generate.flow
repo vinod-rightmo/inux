@@ -1,0 +1,55 @@
+USE estimate-template.flow
+USE estimate-rules.flow
+USE estimate-draft-rules.flow
+USE ../knowledge/common-knowledge.flow
+USE ../knowledge/tool-knowledge.flow
+
+DO Resolve the canonical project and active ticket from @request or conversation,
+    and select the draft under @draft_rules. Reject mismatches and retain local
+    task identity. Return an object with project, ticket_id (NULL if unknown),
+    ticket (complete matching cached Jira object or NULL), path, and text
+    (both NULL for a new draft). AS state
+
+IF @state.ticket_id == NULL
+    ASK "Which Jira ticket should this estimate use?" AS ticket_input
+
+    DO Validate @ticket_input as one Jira ID against the current task and draft
+        association. Bind an unassigned draft, retain task identity, and return
+        @state updated with that ID. AS state
+
+IF @state.ticket == NULL
+    DO Resolve private absolute acli using @tool_guidance. Return its path. AS acli
+
+    RUN @acli jira workitem view @state.ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json
+    AS ticket_result
+
+    DO Parse @ticket_result.stdout as JSON. Verify its key equals @state.ticket_id
+        and requested details are complete. Retain the full ticket and project.
+        Return @state updated with that ticket object. AS state
+
+DO Assess expected behavior from @state.ticket, relevant workflow, code,
+    coverage, and team scoring guidance once. Reuse current evidence; searches must affect the estimate.
+    Resolve scope-changing ambiguity from Jira comments or attachments only as
+    needed, following @tool_guidance. Do not run tests. Return an object with
+    scope, evidence, scoring_guidance, assumptions, risks, and Boolean blocked
+    (required information is missing). AS analysis
+
+IF @analysis.blocked == TRUE
+    ASK "What is the missing scope or behavior needed for this estimate?" AS clarification
+
+    DO Apply @clarification to @analysis and reassess. Return the updated object. AS analysis
+
+    IF @analysis.blocked == TRUE
+        RETURN "Estimate generation stopped because required information is still missing."
+
+DO Generate the complete estimate for @state.ticket_id and @request from
+    @estimate_template, @state.text, and @analysis using @estimate_rules and
+    @writing_guidance. Preserve supported developer decisions. Return the text. AS draft
+
+DO Validate the complete @draft against @estimate_template and @estimate_rules.
+
+DO Save and verify @draft under @draft_rules, using @state.path when present
+    and @state.text as the concurrent-edit baseline. Recheck the active project
+    and ticket against @state.project and @state.ticket_id. Return the saved path. AS draft_path
+
+PRINT Report @state.ticket_id, saved SP, @draft_path, and material assumptions or risks briefly.

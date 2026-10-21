@@ -1,0 +1,38 @@
+# x-release-please-start-version
+CONTEXT
+    Version: 1.0.0
+    Repository: vinod-rightmo/inux
+
+    darwin/amd64 https://github.com/vinod-rightmo/inux/releases/download/v1.0.0/ix-darwin-amd64
+    darwin/arm64 https://github.com/vinod-rightmo/inux/releases/download/v1.0.0/ix-darwin-arm64
+    linux/amd64 https://github.com/vinod-rightmo/inux/releases/download/v1.0.0/ix-linux-amd64
+    linux/arm64 https://github.com/vinod-rightmo/inux/releases/download/v1.0.0/ix-linux-arm64
+    windows/amd64 https://github.com/vinod-rightmo/inux/releases/download/v1.0.0/ix-windows-amd64.exe
+AS ix_release
+# x-release-please-end
+
+DO Resolve the ix version from @options.target and repository from
+    @options.repository when non-NULL, otherwise their Version and Repository
+    entries in @ix_release. Select its exact URL for @platform.os and
+    @platform.arch. For overrides, replace only the default version and
+    repository in that URL. Return an object with version, repository, url,
+    tag "v" plus version, and expected_version "ix " plus version. AS inux_package
+
+PRINT "Step 2 of 3: Set up Inux CLI (ix)."
+
+DO Probe only @host.ix. Match the parsed version exactly to @inux_package.version.
+    Treat missing, broken, or mismatched installations as not ready. Return an
+    object with path, version, and Boolean ready. AS inux
+
+IF @inux.ready is FALSE
+    DO Use verified @host.gh release download for @inux_package.repository at @inux_package.tag
+        to fetch the exact asset identified by @inux_package.url and checksums.txt into
+        one unique private temporary directory. Create missing temporary parents
+        as needed. Require a matching checksum entry and verify only the selected
+        asset against that entry, without checking undownloaded assets. Install
+        at @host.ix using @install_rules and require @inux_package.expected_version.
+        Return an object with path, verified version, and ready TRUE. AS inux
+
+RUN @host.ix --help
+
+PRINT Report the verified Inux CLI version and path from @inux.

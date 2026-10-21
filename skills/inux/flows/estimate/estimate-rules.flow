@@ -1,0 +1,9 @@
+CONTEXT
+    Keep the template's fields, six rows, and row order. Use nonnegative integer
+    team scores; without team guidance use 0 for no meaningful work and 1–3 for
+    increasing complexity. Explain zeros, avoid double-counting, and keep
+    uncertainty in Risk & Unknowns. Total Complexity Score is the exact sum.
+    Final Estimate is a supported numeric judgment ending in SP, with no invented
+    score-to-SP formula. Complete estimates include Overall Reason and contain
+    no placeholders or unsupported claims.
+AS estimate_rules

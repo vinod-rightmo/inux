@@ -31,9 +31,6 @@ archives:
       - src: skills/inux/agents/*
         dst: agents
         strip_parent: true
-      - src: skills/inux/assets/*
-        dst: assets
-        strip_parent: true
       - src: skills/inux/references/*.md
         dst: references
         strip_parent: true
@@ -51,6 +48,15 @@ archives:
         strip_parent: true
       - src: skills/inux/flows/setup/*.flow
         dst: flows/setup
+        strip_parent: true
+      - src: skills/inux/flows/branch/*.flow
+        dst: flows/branch
+        strip_parent: true
+      - src: skills/inux/flows/commit/*.flow
+        dst: flows/commit
+        strip_parent: true
+      - src: skills/inux/flows/knowledge/*.flow
+        dst: flows/knowledge
         strip_parent: true
 
 checksum:

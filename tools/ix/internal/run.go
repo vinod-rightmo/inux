@@ -9,10 +9,8 @@ import (
 )
 
 const help = `ix --version                              Show the installed CLI version.
-ix task --snapshot [PROJECT]              Read a compact .inux state token without writing.
-ix task [--expect SNAPSHOT] TEMPLATES_DIR [PROJECT] Replace .inux/ with an empty ticket and both drafts.
 ix adf INPUT [OUTPUT]                       Convert Markdown; omit OUTPUT to print ADF JSON.
-PROJECT defaults to the current directory. No downloads, authentication, or publishing.
+No task files, downloads, authentication, or publishing.
 `
 
 // Version is set from the release version at build time.
@@ -32,8 +30,6 @@ func Run(args []string, out io.Writer) error {
 		return err
 	}
 	switch args[0] {
-	case "task":
-		return commands.Task(args[1:], out)
 	case "adf":
 		return commands.ADF(args[1:], out)
 	default:
