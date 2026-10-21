@@ -207,18 +207,14 @@ It writes ADF JSON to the output file and preserves the Markdown input.
 
 ### Build and push manually
 
-Run tests, then build the platform binaries from the repository root:
+With Go and Make installed, run this command from the repository root:
 
 ```sh
-cd tools/adf
-go test ./...
-mkdir -p ../../bin
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-darwin-amd64 .
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-darwin-arm64 .
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-linux-amd64 .
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-linux-arm64 .
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-windows-amd64.exe .
+make build
 ```
+
+It runs the Go tests, then builds all five supported platform binaries in
+[bin/](bin/). The commands live in the [Makefile](Makefile).
 
 Commit and push updated source and binaries together. Inux and `adf` are
 unversioned; builds and publishing are manual. Use Conventional Commits for
