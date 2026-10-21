@@ -49,7 +49,7 @@ IF @branch_exists == TRUE
         task branch. Return the updated naming object. AS naming
 
 DO Verify @naming.name is unused, follows @context.naming_rules, and any supplied
-    ticket matches the active ticket. Do not use ix or a generated validator.
+    ticket matches the active ticket. Do not use a converter or a generated validator.
 
 RUN git -C @context.project switch -c @naming.name
 AS creation

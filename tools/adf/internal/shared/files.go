@@ -8,7 +8,7 @@ import (
 
 // Save replaces a file using a temporary file in the same directory.
 func Save(path string, content []byte) error {
-	file, err := os.CreateTemp(filepath.Dir(path), ".inux-write-*")
+	file, err := os.CreateTemp(filepath.Dir(path), ".adf-*")
 	if err != nil {
 		return err
 	}

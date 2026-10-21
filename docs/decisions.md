@@ -1,5 +1,17 @@
 # Implementation decisions
 
+## 2026-10-21: Keep one unversioned Markdown converter
+
+**Decision:** Rename the Go command from ix to adf and accept exactly an input
+Markdown path and an output ADF path: `adf input.md output.adf`. Keep conversion,
+UTF-8 validation, input protection, and atomic writes. Build platform binaries
+manually, commit them in `bin/`, and let setup retrieve the current binary through
+GitHub CLI. Remove application versions, Release Please, GoReleaser, and GitHub
+workflows. This supersedes earlier ix version and release decisions below.
+
+**Reason:** Conversion is the Go program's only job. Manual builds and pushes
+keep its delivery aligned with the skill without a separate release process.
+
 ## 2026-10-20: Keep editable drafts outside the repository
 
 **Decision:** Task loading keeps Jira details in conversation context. Create

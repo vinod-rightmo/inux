@@ -1,0 +1,22 @@
+PRINT "Step 2 of 3: Set up Markdown converter (adf)."
+
+DO Select the repository from @options.repository, otherwise vinod-rightmo/inux.
+    Resolve the binary path as bin/adf-<os>-<arch> using @platform, with .exe on
+    Windows. Use @options.adf_ref when supplied, otherwise the repository's
+    default branch. Return an object with repository, path, and ref. AS package
+
+DO Install @host.adf as one bounded transaction under @install_rules. Use verified
+    @host.gh api with separate arguments --method, GET, --header,
+    "Accept: application/vnd.github.raw+json", and the endpoint
+    repos/<repository>/contents/<path> from @package. For an explicit ref, pass
+    --raw-field with ref=<ref>. Stream raw stdout directly into a file in a unique
+    private temporary directory; never print or text-decode the binary. Require
+    the download to succeed before installation. Set executable permissions and
+    run this binary with a small UTF-8 Markdown fixture and a separate .adf output
+    file. Require valid ADF representing the fixture and an unchanged input.
+    Compare the verified binary bytes with any installed copy; retain an identical
+    copy or replace it at @host.adf. Preserve a working installation on failure.
+    Clean only this transaction's temporary files on success or failure. Return
+    an object with path, ready TRUE, and Boolean updated. AS converter
+
+PRINT Report the verified converter path @converter.path and whether it was updated.

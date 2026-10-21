@@ -1,6 +1,5 @@
-# x-release-please-start-version
 PRINT """
-Inux v1.0.0 — Vinod Liyanage
+Inux — Vinod Liyanage
 
 | Command | Purpose |
 |---|---|
@@ -31,4 +30,3 @@ Examples: `/inux estimate improve the reasons`, `/inux ts summarize these change
 Publishing requires an explicit `/inux estimate publish`,
 `/inux ts publish` (or `/inux technical summary publish`), or `/inux pr publish` request.
 """
-# x-release-please-end

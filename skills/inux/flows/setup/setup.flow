@@ -2,26 +2,26 @@ PRINT """Welcome to Inux!
 
 Setup runs one step at a time:
 1. GitHub CLI (gh): download the pinned version, sign in through your browser, and verify access.
-2. Inux CLI (ix): download the private release using GitHub CLI and verify the installation.
+2. Markdown converter (adf): install the manually built binary from the repository and verify conversion.
 3. Atlassian CLI (acli): download the pinned version, sign in to Jira through your browser, and verify access.
 
-Tools are installed in your private Inux tools directory. Existing matching installations and logins are reused.
+Tools are installed in your private Inux tools directory. Matching installations and logins are reused.
 After each verified step, type done to continue. Any other reply stops setup.
 If a step fails, setup stops there and reports the error with its source line.
 """
 
 CONTEXT
     Install only at the specified private path, using a unique private temporary
-    directory. Create missing parents only as needed. Verify the selected version
+    directory. Create missing parents only as needed. Verify the requested checks
     and executable permissions before replacing a working tool. Remove only that
     temporary directory on success or failure, plus newly created parents that
     remain empty on failure.
 AS install_rules
 
 DO Resolve setup inputs. Return an object with windows TRUE only on Windows;
-    storage from its explicit override or NULL; and target, repository,
+    storage from its explicit override or NULL; and repository, adf_ref,
     gh_version, and acli_version from explicit overrides or NULL. Normalize
-    non-NULL version overrides without a leading v. AS options
+    non-NULL gh/acli version overrides without a leading v. AS options
 
 IF @options.windows is TRUE
     RUN powershell.exe -NoProfile -NonInteractive -Command "[Environment]::GetFolderPath('UserProfile'); Write-Output 'windows'; [Runtime.InteropServices.RuntimeInformation]::OSArchitecture"
@@ -40,22 +40,22 @@ ELSE
         Darwin to darwin, Linux to linux, x86_64 to amd64, and aarch64 to arm64.
         Require darwin or linux on amd64 or arm64. AS platform
 
-DO Resolve absolute bin as <storage>/tools/bin, with private gh, ix, and acli
+DO Resolve absolute bin as <storage>/tools/bin, with private gh, adf, and acli
     paths under bin (.exe on Windows). Use @options.storage when non-NULL,
     otherwise <home>/.inux with home from @platform.home. Return an object
-    with bin, gh, ix, and acli. AS host
+    with bin, gh, adf, and acli. AS host
 
 USE setup-gh.flow
-ASK "GitHub CLI is ready and authenticated. Type done to continue to ix, or anything else to stop." AS github_confirmation
+ASK "GitHub CLI is ready and authenticated. Type done to continue to adf, or anything else to stop." AS github_confirmation
 
 IF @github_confirmation is not exactly "done"
     RETURN "Setup stopped after GitHub CLI."
 
-USE setup-ix.flow
-ASK "Inux CLI is ready. Type done to continue to Atlassian CLI, or anything else to stop." AS inux_confirmation
+USE setup-adf.flow
+ASK "ADF converter is ready. Type done to continue to Atlassian CLI, or anything else to stop." AS adf_confirmation
 
-IF @inux_confirmation is not exactly "done"
-    RETURN "Setup stopped after Inux CLI."
+IF @adf_confirmation is not exactly "done"
+    RETURN "Setup stopped after ADF converter."
 
 USE setup-acli.flow
 ASK "Atlassian CLI is ready and authenticated. Type done to finish setup, or anything else to stop." AS atlassian_confirmation
@@ -63,5 +63,5 @@ ASK "Atlassian CLI is ready and authenticated. Type done to finish setup, or any
 IF @atlassian_confirmation is not exactly "done"
     RETURN "Setup stopped after Atlassian CLI."
 
-PRINT Report the verified tool versions, paths, and authentication states from @github, @inux, and @atlassian, plus @host.bin, in a compact table.
+PRINT Report the GitHub and Atlassian versions and authentication states from @github and @atlassian, the verified converter at @converter.path, and @host.bin in a compact table.
 RETURN "Inux setup is complete."

@@ -16,8 +16,7 @@ npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 ```
 
 The Inux command installs the current skill from this repository's default branch
-(`main`), including `flows/` and `references/`. It does not select the
-latest GitHub release or require an npm package for Inux. Merge skill changes into
+(`main`), including `flows/` and `references/`. Merge skill changes into
 `main` to make them available through the same command. Install Flow separately as
 shown above; Inux requires its interpreter.
 
@@ -38,14 +37,16 @@ Open a new conversation in Codex or Cursor and run:
 /inux setup
 ```
 
-Setup installs tools privately in `~/.inux/tools/bin/`: `ix` matches the Inux
-version; `gh` and `acli` use the versions pinned in
-[setup.flow](skills/inux/flows/setup/setup.flow).
-Explicit version overrides are supported. Tools matching the selected versions
-are reused. The agent guides GitHub and Jira browser login,
-verifies authentication, and cleans up temporary files. Browser login runs as
-one interactive process and waits for completion. `ix` installs only after
-GitHub authentication succeeds so the private release assets are accessible.
+Setup installs `gh`, `adf`, and `acli` privately in `~/.inux/tools/bin/`.
+The agent guides GitHub and Jira browser login, verifies each tool, and waits
+for `done` between steps. Matching installations and logins are reused.
+
+The `adf` converter is an unversioned binary built manually and committed in
+[bin/](bin/). Setup downloads the matching platform binary with authenticated
+GitHub CLI access, then verifies a Markdown conversion before installing it.
+An explicit `adf_ref` can select another branch or commit. The third-party `gh`
+and `acli` versions remain pinned in their setup workflows, with explicit
+overrides supported.
 
 **3. Start a task**
 
@@ -162,7 +163,7 @@ after readiness checks pass.
 To try the normal actions without publishing, add **“do not publish”** to your request.
 
 <details>
-<summary><strong>Developing and releasing Inux</strong></summary>
+<summary><strong>Developing Inux</strong></summary>
 
 ### Local checks
 
@@ -188,7 +189,7 @@ flows/
                 tool-knowledge.flow, summary-knowledge.flow
 ```
 
-Keep single-consumer contexts inline. Setup contains its release data and install
+Keep single-consumer contexts inline. Setup contains its tool download data and install
 rules; PR preparation and TS generation contain their own templates. Only contexts
 shared by multiple Flows have separate files. `common-knowledge.flow` holds writing
 guidance; draft, tool, and summary rules load separately. Estimates share their own
@@ -196,41 +197,33 @@ template, draft, and scoring contexts across actions. Cleanup loads only draft r
 Setup runs one tool step at a time; branch and commit remain standalone.
 Publication gates remain in place.
 
-The Go CLI source lives in [tools/ix](tools/ix/).
-`ix` only converts Markdown to Jira ADF and reports its version. The agent
-loads Jira tickets into conversation context, manages temporary Markdown drafts,
-and checks branch and commit naming conventions directly. No repository task
-directory, workspace snapshots, or Git exclusion changes are needed.
+The converter source lives in [tools/adf](tools/adf/). Its command is:
 
 ```sh
-(cd tools/ix && go test ./...)
-goreleaser check
-goreleaser release --snapshot --clean
+adf input.md output.adf
 ```
 
-The last two commands require GoReleaser. Snapshot mode builds locally without
-publishing.
+It writes ADF JSON to the output file and preserves the Markdown input.
 
-### Releases
+### Build and push manually
 
-Use Conventional Commits in this repository:
+Run tests, then build the platform binaries from the repository root:
 
-| Commit | Version change |
-| --- | --- |
-| `fix: ...` | Patch |
-| `feat: ...` | Minor |
-| `feat!: ...` | Major |
+```sh
+cd tools/adf
+go test ./...
+mkdir -p ../../bin
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-darwin-amd64 .
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-darwin-arm64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-linux-amd64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-linux-arm64 .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../../bin/adf-windows-amd64.exe .
+```
 
-Merge changes into `main`. Release Please opens a release PR with the version
-and changelog. Review and merge that PR; GitHub then tests, builds, and publishes
-the downloads with GoReleaser. The skill and `ix` share one version.
+Commit and push updated source and binaries together. Inux and `adf` are
+unversioned; builds and publishing are manual. Use Conventional Commits for
+repository changes.
 
-Keep the `x-release-please-version` comment in `SKILL.md`; it lets Release Please
-update the skill version automatically.
-
-[Release workflow](.github/workflows/release.yml) ·
-[Release configuration](release-please-config.json) ·
-[Build configuration](.goreleaser.yaml) ·
 [CLI reference](skills/inux/references/cli.md) ·
 [Implementation decisions](docs/decisions.md)
 

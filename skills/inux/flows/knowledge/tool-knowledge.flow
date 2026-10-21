@@ -1,5 +1,5 @@
 CONTEXT
-    Use private absolute gh, acli, and ix executables under <storage>/tools/bin;
+    Use private absolute gh, acli, and adf executables under <storage>/tools/bin;
     storage defaults to <user-home>/.inux. Honor an explicit storage override and
     use .exe on Windows. Outside setup, report missing tools without installing,
     logging in, or probing versions. For Jira network calls, request host-approved

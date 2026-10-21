@@ -16,8 +16,8 @@ IF @state.ticket_id == NULL
 DO Require a complete @state.text matching @estimate_template and @estimate_rules.
     Stop on missing or invalid content; do not rewrite.
 
-DO Resolve private absolute acli and ix using @tool_guidance.
-    Return an object with acli and ix. AS tools
+DO Resolve private absolute acli and adf using @tool_guidance.
+    Return an object with acli and adf. AS tools
 
 RUN @tools.acli jira workitem comment list --key @state.ticket_id --json --paginate
 AS comments_result
@@ -32,8 +32,8 @@ IF @comment_state.evidence_contradicts_draft == TRUE
 
 IF @comment_state.identical_comment == FALSE
     DO Publish @state.text as one bounded transaction following @tool_guidance.
-        Create a unique private temporary directory and ADF path. Run @tools.ix
-        with separate arguments adf, @state.path, and the ADF path; verify faithful
+        Create a unique private temporary directory and .adf output path. Run @tools.adf
+        with separate arguments @state.path and the output path; verify faithful
         conversion. Immediately recheck active project, ticket, and saved text
         against @state; stop on any change. Run @tools.acli with separate arguments
         jira, workitem, comment, create, --key, @state.ticket_id, --body-file,

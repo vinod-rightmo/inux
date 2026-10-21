@@ -1,25 +1,20 @@
-# Inux CLI
+# Markdown to ADF
 
-Resolve `<cli>` to `<user-home>/.inux/tools/bin/ix` (`ix.exe` on Windows),
-or `<storage>/tools/bin/ix` when an explicit Inux storage root is supplied.
-Pass arguments separately. The compiled tool needs no Go or Node runtime.
---version prints `ix <version>`; release builds use the same version as the
-skill, local unversioned builds use dev.
+Resolve `<adf>` to `<user-home>/.inux/tools/bin/adf` (`adf.exe` on Windows),
+or `<storage>/tools/bin/adf` for an explicit Inux storage root. Pass paths as
+separate arguments:
 
 ```text
-<cli> --version
-<cli> adf INPUT.md OUTPUT.json
+<adf> INPUT.md OUTPUT.adf
 ```
 
-`adf` reads UTF-8 Markdown and writes ADF JSON. Omit OUTPUT for ADF on stdout.
-It never replaces its Markdown input, including aliases. Conversion-to-file
-reports JSON on stdout. Errors are JSON on stderr with exit status 1; never
-assume success from partial output.
+The converter reads UTF-8 Markdown and writes Atlassian Document Format JSON to
+OUTPUT.adf. Both paths are required. It preserves the Markdown input, including
+hard-link and symbolic-link aliases, and replaces output atomically. Conversion
+is silent on success; errors go to stderr with a nonzero exit status. `--help`
+shows usage. The binary has no application version or subcommands.
 
-The agent fetches Jira through acli, manages temporary drafts using the selected action's
-knowledge contexts, and checks branch and commit conventions directly.
-ix does not create task files, manage workspaces, invoke another CLI, install,
-authenticate, or publish. The skill package contains instructions and templates,
-without executables. If ix is missing or cannot run, follow
-[setup.flow](../flows/setup/setup.flow) when setup is requested; otherwise report that
-setup is needed. Do not silently use a PATH binary or another platform's executable.
+Inux setup downloads the manually built platform binary from the repository's
+`bin/` directory using authenticated GitHub CLI access. Go is needed only for
+building the converter. If the private executable is missing, request
+[setup](../flows/setup/setup.flow); other actions report the missing tool.
