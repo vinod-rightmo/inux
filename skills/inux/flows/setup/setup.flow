@@ -2,7 +2,7 @@ PRINT """Welcome to Inux!
 
 Setup runs one step at a time:
 1. GitHub CLI (gh): download the pinned version, sign in through your browser, and verify access.
-2. Markdown converter (adf): install the manually built binary from the repository and verify conversion.
+2. Markdown converter (adf): download the matching platform binary from the repository and verify conversion.
 3. Atlassian CLI (acli): download the pinned version, sign in to Jira through your browser, and verify access.
 
 Tools are installed in your private Inux tools directory. Matching installations and logins are reused.

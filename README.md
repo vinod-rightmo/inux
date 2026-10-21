@@ -42,8 +42,8 @@ The agent guides GitHub and Jira browser login, verifies each tool, and waits
 for `done` between steps. Matching installations and logins are reused.
 
 The `adf` converter is an unversioned binary built manually and committed in
-[bin/](bin/). Setup downloads the matching platform binary with authenticated
-GitHub CLI access, then verifies a Markdown conversion before installing it.
+[bin/](bin/). Setup downloads the matching platform binary directly, then
+verifies a Markdown conversion before installing it.
 An explicit `adf_ref` can select another branch or commit. The third-party `gh`
 and `acli` versions remain pinned in their setup workflows, with explicit
 overrides supported.

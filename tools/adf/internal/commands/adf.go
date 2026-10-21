@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"unicode/utf8"
 
-	"adf/internal/shared"
 	"github.com/ericmason/mdadf"
 )
 
@@ -46,5 +46,15 @@ func ADF(args []string) error {
 	if err != nil {
 		return err
 	}
-	return shared.Save(args[1], append(converted, '\n'))
+	file, err := os.CreateTemp(filepath.Dir(args[1]), ".adf-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+	_, writeErr := file.Write(append(converted, '\n'))
+	closeErr := file.Close()
+	if writeErr != nil || closeErr != nil {
+		return errors.Join(writeErr, closeErr)
+	}
+	return os.Rename(file.Name(), args[1])
 }

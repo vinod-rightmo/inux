@@ -15,6 +15,6 @@ is silent on success; errors go to stderr with a nonzero exit status. `--help`
 shows usage. The binary has no application version or subcommands.
 
 Inux setup downloads the manually built platform binary from the repository's
-`bin/` directory using authenticated GitHub CLI access. Go is needed only for
-building the converter. If the private executable is missing, request
+`bin/` directory through a direct download URL. Go is needed only for building
+the converter. If the private executable is missing, request
 [setup](../flows/setup/setup.flow); other actions report the missing tool.
