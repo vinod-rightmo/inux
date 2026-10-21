@@ -1,7 +1,6 @@
-package tests
+package main
 
 import (
-	app "adf/internal"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -35,7 +34,7 @@ func TestConvertsMarkdown(t *testing.T) {
 	put(t, input, markdown)
 	put(t, output, []byte("old output"))
 	var stdout bytes.Buffer
-	if err := app.Run([]string{input, output}, &stdout); err != nil {
+	if err := run([]string{input, output}, &stdout); err != nil {
 		t.Fatal(err)
 	}
 	converted := read(t, output)
@@ -60,7 +59,7 @@ func TestEmptyMarkdown(t *testing.T) {
 	root := t.TempDir()
 	input, output := filepath.Join(root, "empty.md"), filepath.Join(root, "empty.adf")
 	put(t, input, nil)
-	if err := app.Run([]string{input, output}, io.Discard); err != nil {
+	if err := run([]string{input, output}, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 	var document map[string]any
@@ -87,7 +86,7 @@ func TestInputAliasesAreProtected(t *testing.T) {
 					t.Skip(err)
 				}
 			}
-			if err := app.Run([]string{input, output}, io.Discard); err == nil {
+			if err := run([]string{input, output}, io.Discard); err == nil {
 				t.Fatal("accepted input overwrite")
 			}
 			if !bytes.Equal(read(t, input), markdown) {
@@ -106,7 +105,7 @@ func TestInvalidInputPreservesOutput(t *testing.T) {
 		if content != nil {
 			put(t, input, content)
 		}
-		if err := app.Run([]string{input, output}, io.Discard); err == nil {
+		if err := run([]string{input, output}, io.Discard); err == nil {
 			t.Fatal("accepted missing or invalid UTF-8 input")
 		}
 		if !bytes.Equal(read(t, output), original) {
@@ -117,13 +116,13 @@ func TestInvalidInputPreservesOutput(t *testing.T) {
 
 func TestArguments(t *testing.T) {
 	for _, args := range [][]string{nil, {"input.md"}, {"input.md", "output.adf", "extra"}, {"--version"}} {
-		if err := app.Run(args, io.Discard); err == nil {
+		if err := run(args, io.Discard); err == nil {
 			t.Fatal("accepted invalid arguments", args)
 		}
 	}
 	for _, flag := range []string{"--help", "-h"} {
 		var output bytes.Buffer
-		if err := app.Run([]string{flag}, &output); err != nil || output.Len() == 0 {
+		if err := run([]string{flag}, &output); err != nil || output.Len() == 0 {
 			t.Fatal("help failed", flag, err)
 		}
 	}
