@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.0.0](https://github.com/vinod-rightmo/inux/compare/v1.0.0...v2.0.0) (2026-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace repository task files and the ix task command with conversation task context and temporary Markdown drafts.
+* estimate, ts, and pr now require a classifiable request instead of bare-command defaults or action-selection prompts.
+
+### Features
+
+* modularize Inux workflows with Flow ([2328067](https://github.com/vinod-rightmo/inux/commit/23280679eee268d54d193989b50689fafb3c3557))
+* route Inux requests and separate workflow files ([b866b8d](https://github.com/vinod-rightmo/inux/commit/b866b8d4ddac185397b574cdd701e64da71882a9))
+
+
+### Bug Fixes
+
+* align Flow workflows and setup authentication ([0a4ca17](https://github.com/vinod-rightmo/inux/commit/0a4ca173475c77b90865ec5e42e415c22e4eecea))
+* align Flow workflows and setup authentication ([a16e353](https://github.com/vinod-rightmo/inux/commit/a16e353cd132d39756648969a9643f828aafc4af))
+
+
+### Code Refactoring
+
+* simplify Inux skill and draft workflows ([619b219](https://github.com/vinod-rightmo/inux/commit/619b2194f6e27fc45f2c553e200a01bbd0cf5a89))
+
 ## [1.0.0](https://github.com/vinod-rightmo/inux/compare/v0.0.1...v1.0.0) (2026-10-15)
 
 
