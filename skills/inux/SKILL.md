@@ -8,13 +8,12 @@ metadata:
 # Inux
 
 Inux requires Flow 0.4.0. For an Inux execution request, load the installed
-`flow` skill and its complete current interpreter, verify that it supports
-Flow 0.4.0, then run [flows/inux.flow](flows/inux.flow).
+`flow` skill and its complete current interpreter, then run
+[flows/inux.flow](flows/inux.flow).
 
 For direct CLI usage, read [cli.md](references/cli.md).
 
-If Flow is unavailable or older than 0.4.0, stop and provide its installation
-or update command:
+If Flow is unavailable, stop and provide its installation command:
 
 ```sh
 npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor

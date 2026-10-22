@@ -18,8 +18,7 @@ npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 The Inux command installs the current skill from this repository's default branch
 (`main`), including `flows/` and `references/`. Merge skill changes into
 `main` to make them available through the same command. Install Flow separately as
-shown above; Inux requires Flow 0.4.0 and its interpreter. Update an older Flow
-installation with the same Flow installation command before running Inux.
+shown above; Inux requires Flow 0.4.0 and its interpreter.
 
 To update an existing global Inux installation:
 
