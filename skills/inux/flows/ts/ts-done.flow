@@ -1,20 +1,20 @@
-USE ../knowledge/draft-knowledge.flow
+use ../knowledge/draft-knowledge.flow
 
-DO Resolve the selected temporary technical-summary draft from @request or conversation
+do Resolve the selected temporary technical-summary draft from @request or conversation
     under @draft_rules, without Jira, Git readiness, or tool checks. Return an
     object with selection_ready, project, ticket_id, path, and owned_directory;
-    use NULL for missing selection details. AS selected
+    use null for missing selection details. as @selected
 
-IF @selected.selection_ready != TRUE
-    ASK "Provide the project, Jira ticket, and exact draft path to remove:" AS selection_input
-    DO Resolve @selection_input under @draft_rules and return the completed
-        selection object. AS selected
+if @selected.selection_ready != true
+    ask "Provide the project, Jira ticket, and exact draft path to remove:" as @selection_input
+    do Resolve @selection_input under @draft_rules and return the completed
+        selection object. as @selected
 
-IF @selected.selection_ready != TRUE
-    RETURN "Draft cleanup stopped because the selection is incomplete."
+if @selected.selection_ready != true
+    return "Draft cleanup stopped because the selection is incomplete."
 
-DO Remove only @selected.path and its empty owned directory under @draft_rules.
+do Remove only @selected.path and its empty owned directory under @draft_rules.
     Done permits an incomplete draft and never publishes. Forget only the cleaned
-    record and return the cleanup result including any retained path. AS cleanup_result
+    record and return the cleanup result including any retained path. as @cleanup_result
 
-PRINT Report @cleanup_result and that nothing was published briefly.
+print Report @cleanup_result and that nothing was published briefly.

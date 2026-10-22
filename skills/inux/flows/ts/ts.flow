@@ -1,28 +1,28 @@
-DO Infer the intention after /inux ts, /inux technical summary, or the equivalent
+do Infer the intention after /inux ts, /inux technical summary, or the equivalent
     plain-language technical-summary request without
     inspecting project or tools. Return an object with unchanged request and mode: "generate"
     for creating/summarizing changes, "improve" for edits/refinement, "publish"
     only for explicit publication, or "done" for finishing/discarding without
-    publication. Use NULL for missing, unsupported, conflicting, or ambiguous
-    requests. AS route
+    publication. Use null for missing, unsupported, conflicting, or ambiguous
+    requests. as @route
 
-SET request = @route.request
-SET mode = @route.mode
+set request = @route.request
+set mode = @route.mode
 
-IF @mode == "generate"
-    USE ts-generate.flow
-    RETURN
+if @mode == "generate"
+    use ts-generate.flow
+    return
 
-IF @mode == "improve"
-    USE ts-improve.flow
-    RETURN
+if @mode == "improve"
+    use ts-improve.flow
+    return
 
-IF @mode == "publish"
-    USE ts-publish.flow
-    RETURN
+if @mode == "publish"
+    use ts-publish.flow
+    return
 
-IF @mode == "done"
-    USE ts-done.flow
-    RETURN
+if @mode == "done"
+    use ts-done.flow
+    return
 
-RETURN "Usage: /inux ts [request]. Request generate, improve, publish, or done."
+return "Usage: /inux ts [request]. Request generate, improve, publish, or done."

@@ -1,40 +1,40 @@
-DO Identify the requested Inux command without inspecting the project or tools.
+do Identify the requested Inux command without inspecting the project or tools.
     Accept /inux commands and equivalent plain language. Return help, setup,
     task, branch_create, commit_changes, estimate, ts, or pr; technical summary
     is an alias for ts. Leave the full request unchanged for the selected
-    workflow, including missing or conflicting action requests. Return NULL
-    when the command itself is unsupported, conflicting, or ambiguous. AS command
+    workflow, including missing or conflicting action requests. Return null
+    when the command itself is unsupported, conflicting, or ambiguous. as @command
 
-IF @command == "help"
-    USE help.flow
-    RETURN
+if @command == "help"
+    use help.flow
+    return
 
-IF @command == "setup"
-    USE setup/setup.flow
-    RETURN
+if @command == "setup"
+    use setup/setup.flow
+    return
 
-IF @command == "task"
-    USE task.flow
-    RETURN
+if @command == "task"
+    use task.flow
+    return
 
-IF @command == "branch_create"
-    USE branch/branch.flow
-    RETURN
+if @command == "branch_create"
+    use branch/branch.flow
+    return
 
-IF @command == "commit_changes"
-    USE commit/commit.flow
-    RETURN
+if @command == "commit_changes"
+    use commit/commit.flow
+    return
 
-IF @command == "estimate"
-    USE estimate/estimate.flow
-    RETURN
+if @command == "estimate"
+    use estimate/estimate.flow
+    return
 
-IF @command == "ts"
-    USE ts/ts.flow
-    RETURN
+if @command == "ts"
+    use ts/ts.flow
+    return
 
-IF @command == "pr"
-    USE pr/pr.flow
-    RETURN
+if @command == "pr"
+    use pr/pr.flow
+    return
 
-RETURN "Usage: /inux help, setup, task <id>, branch create, commit changes, estimate [request], ts [request], technical summary [request], or pr [request]."
+return "Usage: /inux help, setup, task <id>, branch create, commit changes, estimate [request], ts [request], technical summary [request], or pr [request]."

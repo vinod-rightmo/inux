@@ -1,57 +1,54 @@
-DO Resolve the absolute project and current user and repository branch
+do Resolve the absolute project and current user and repository branch
     conventions, including required prefixes. Return an object with project,
     naming_rules, current_branch, and start_ref set to the explicit parent
-    branch or NULL. Never infer a parent from a PR target. AS context
+    branch or null. Never infer a parent from a PR target. as @context
 
-DO Read branch, HEAD, porcelain status, and active Git operation state together
+do Read branch, HEAD, porcelain status, and active Git operation state together
     from @context.project. Return an object with attached_head, conflicts,
-    active_operation, and current_branch. AS git_state
+    active_operation, and current_branch. as @git_state
 
-DO Verify @git_state has an attached HEAD, no unresolved conflicts, and no
+do Verify @git_state has an attached HEAD, no unresolved conflicts, and no
     active merge, rebase, cherry-pick, or revert.
 
-DO Use the supplied name or derive a concise task branch name under
+do Use the supplied name or derive a concise task branch name under
     @context.naming_rules. When repository rules do not override it, use
     <type>/<TICKET-ID>-<lowercase-kebab-description> with the exact uppercase
     active ticket, type feature/bugfix/hotfix/chore/refactor/perf/test/release,
     and 1–6 lowercase letter or digit description words. Count description
     words only. Map Bug to bugfix and Story or new capability to feature. Reuse
     only the active ticket ID, type, and summary from conversation context when needed. Return an
-    object with name, naming_ready, and missing_facts. AS naming
+    object with name, naming_ready, and missing_facts. as @naming
 
-IF @naming.naming_ready == FALSE
-    ASK "Provide the missing branch name or task facts:" AS naming_input
+if @naming.naming_ready == false
+    ask "Provide the missing branch name or task facts:" as @naming_input
 
-    DO Complete @naming from @naming_input under @context.naming_rules. Return
-        an updated object with name, naming_ready, and missing_facts. AS naming
+    do Complete @naming from @naming_input under @context.naming_rules. Return
+        an updated object with name, naming_ready, and missing_facts. as @naming
 
-IF @naming.naming_ready != TRUE
-    RETURN "Branch creation stopped because the branch name is incomplete."
+if @naming.naming_ready != true
+    return "Branch creation stopped because the branch name is incomplete."
 
-DO Choose @context.start_ref when non-NULL, otherwise @git_state.current_branch.
+do Choose @context.start_ref when non-null, otherwise @git_state.current_branch.
     Verify it is an existing local branch with a configured upstream. Preserve
     uncommitted changes and do not stash, reset, or discard them. Return the
-    branch name. AS parent_branch
+    branch name. as @parent_branch
 
-RUN git -C @context.project switch @parent_branch
-AS switch_result
+run git -C @context.project switch @parent_branch as @switch_result
 
-RUN git -C @context.project -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only
-AS pull_result
+run git -C @context.project -c merge.autoStash=false -c rebase.autoStash=false pull --ff-only as @pull_result
 
-DO Compare @naming.name with local branches and known remote-tracking branches
-    without fetching. Return TRUE when the name already exists, otherwise FALSE. AS branch_exists
+do Compare @naming.name with local branches and known remote-tracking branches
+    without fetching. Return true when the name already exists, otherwise false. as @branch_exists
 
-IF @branch_exists == TRUE
-    DO Choose the first unused suffix -2, -3, and so on for @naming.name.
+if @branch_exists == true
+    do Choose the first unused suffix -2, -3, and so on for @naming.name.
         Preserve required prefix and ticket, shortening the description only
         when needed to retain naming limits. Never reuse or reset an existing
-        task branch. Return the updated naming object. AS naming
+        task branch. Return the updated naming object. as @naming
 
-DO Verify @naming.name is unused, follows @context.naming_rules, and any supplied
+do Verify @naming.name is unused, follows @context.naming_rules, and any supplied
     ticket matches the active ticket. Do not use a converter or a generated validator.
 
-RUN git -C @context.project switch -c @naming.name
-AS creation
+run git -C @context.project switch -c @naming.name as @creation
 
-PRINT Report @naming.name and @creation briefly without reinspection.
+print Report @naming.name and @creation briefly without reinspection.

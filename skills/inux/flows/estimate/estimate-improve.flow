@@ -1,22 +1,22 @@
-USE estimate-template.flow
-USE estimate-rules.flow
-USE estimate-draft-rules.flow
-USE ../knowledge/common-knowledge.flow
+use estimate-template.flow
+use estimate-rules.flow
+use estimate-draft-rules.flow
+use ../knowledge/common-knowledge.flow
 
-DO Read the estimate selected by @request or this conversation under
+do Read the estimate selected by @request or this conversation under
     @draft_rules. Use the explicit project or current checkout and any known
-    ticket. Return an object with path, text, project, and ticket_id. AS estimate
+    ticket. Return an object with path, text, project, and ticket_id. as @estimate
 
-DO Improve @estimate.text as requested by @request using @estimate_rules and
+do Improve @estimate.text as requested by @request using @estimate_rules and
     @writing_guidance. Preserve layout and unrequested content. Inspect only
     evidence needed by the request. Wording edits must not change scores, scope,
     or SP, or trigger Jira, code investigation, or tests. Do not automatically
-    fill an empty template. Return the draft text. AS draft
+    fill an empty template. Return the draft text. as @draft
 
-DO Validate changed fields and dependent totals against @estimate_template and
+do Validate changed fields and dependent totals against @estimate_template and
     @estimate_rules. Leave unrelated gaps unchanged and available to report.
 
-DO Save and verify @draft at @estimate.path under @draft_rules, using
+do Save and verify @draft at @estimate.path under @draft_rules, using
     @estimate.text as the concurrent-edit baseline.
 
-PRINT Report @estimate.path and any justified SP changes or remaining gaps briefly.
+print Report @estimate.path and any justified SP changes or remaining gaps briefly.

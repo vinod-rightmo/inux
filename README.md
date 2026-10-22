@@ -18,7 +18,8 @@ npx skills add vinodliyanage/flow --skill flow --global --agent codex cursor
 The Inux command installs the current skill from this repository's default branch
 (`main`), including `flows/` and `references/`. Merge skill changes into
 `main` to make them available through the same command. Install Flow separately as
-shown above; Inux requires its interpreter.
+shown above; Inux requires Flow 0.4.0 and its interpreter. Update an older Flow
+installation with the same Flow installation command before running Inux.
 
 To update an existing global Inux installation:
 
@@ -169,6 +170,10 @@ To try the normal actions without publishing, add **“do not publish”** to yo
 
 The skill entry point [SKILL.md](skills/inux/SKILL.md) loads Flow and
 [inux.flow](skills/inux/flows/inux.flow), which routes only the requested command.
+Workflows use Flow 0.4.0 lowercase keywords and `as @name` bindings. Brief
+contexts and direct commands keep inline bindings; larger contexts and literal
+script bodies place an aligned binding after the body. Each instruction has
+one binding position, and literal content stays unchanged.
 Executable workflows live in `skills/inux/flows/`, with action subfolders;
 `skills/inux/references/` contains only Markdown guidance.
 

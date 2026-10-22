@@ -1,11 +1,11 @@
-CONTEXT
+context
     Select estimate.md only from an explicit path or this conversation's exact
     record for the canonical project and ticket. Reject mismatches or ambiguous
     selection; never scan temporary directories. Read direct developer edits.
     Improve and publish require an existing file. Generate may create one only
     when none is known; a known missing file is an error. Create selects a fresh
     template and keeps older drafts. Templates and local improvements may have
-    ticket NULL; bind an unassigned draft once for generation or publication.
+    ticket null; bind an unassigned draft once for generation or publication.
 
     New drafts use a unique private OS temporary directory outside the canonical
     project, with 0700 directory and 0600 file permissions where supported.
@@ -18,4 +18,4 @@ CONTEXT
     remove only the selected temporary file if it still matches the published
     text. Never follow links. Remove only an empty directory owned by this workflow
     and forget the cleaned path. Preserve other drafts and report any retained path.
-AS draft_rules
+as @draft_rules

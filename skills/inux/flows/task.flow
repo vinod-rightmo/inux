@@ -1,17 +1,16 @@
-USE knowledge/tool-knowledge.flow
+use knowledge/tool-knowledge.flow
 
-DO Resolve the requested ticket ID, absolute project, and private absolute acli
+do Resolve the requested ticket ID, absolute project, and private absolute acli
     executable using @tool_guidance.
-    Return an object with ticket_id, project, and acli. AS task_context
+    Return an object with ticket_id, project, and acli. as @task_context
 
-RUN @task_context.acli jira workitem view @task_context.ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json
-AS jira_result
+run @task_context.acli jira workitem view @task_context.ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json as @jira_result
 
-DO Parse @jira_result.stdout as JSON. Verify its key equals
+do Parse @jira_result.stdout as JSON. Verify its key equals
     @task_context.ticket_id and the requested details are complete. Retain the
     complete ticket with its project as the active task in conversation context.
     Preserve descriptions, criteria, lists, tables, attachments, media names and
     URLs, and unresolved references. Invent no criteria or mappings. Write no
-    files and preserve existing drafts. Return the ticket object. AS ticket
+    files and preserve existing drafts. Return the ticket object. as @ticket
 
-PRINT Report @task_context.ticket_id and its summary briefly; the task is loaded in conversation context.
+print Report @task_context.ticket_id and its summary briefly; the task is loaded in conversation context.

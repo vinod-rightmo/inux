@@ -1,37 +1,36 @@
-USE estimate-template.flow
-USE estimate-rules.flow
-USE estimate-draft-rules.flow
-USE ../knowledge/tool-knowledge.flow
+use estimate-template.flow
+use estimate-rules.flow
+use estimate-draft-rules.flow
+use ../knowledge/tool-knowledge.flow
 
-DO Require explicit Jira publication in @request. Resolve and retain the local
+do Require explicit Jira publication in @request. Resolve and retain the local
     project and ticket identity, and read the selected estimate under @draft_rules.
-    Return an object with project, ticket_id (NULL if unknown), path, and text. AS state
+    Return an object with project, ticket_id (null if unknown), path, and text. as @state
 
-IF @state.ticket_id == NULL
-    ASK "Which Jira ticket should this estimate use?" AS ticket_input
-    DO Validate @ticket_input as one Jira ID against the current task and draft
+if @state.ticket_id == null
+    ask "Which Jira ticket should this estimate use?" as @ticket_input
+    do Validate @ticket_input as one Jira ID against the current task and draft
         association. Bind an unassigned draft, retain task identity, and return
-        @state updated with that ID. AS state
+        @state updated with that ID. as @state
 
-DO Require a complete @state.text matching @estimate_template and @estimate_rules.
+do Require a complete @state.text matching @estimate_template and @estimate_rules.
     Stop on missing or invalid content; do not rewrite.
 
-DO Resolve private absolute acli and adf using @tool_guidance.
-    Return an object with acli and adf. AS tools
+do Resolve private absolute acli and adf using @tool_guidance.
+    Return an object with acli and adf. as @tools
 
-RUN @tools.acli jira workitem comment list --key @state.ticket_id --json --paginate
-AS comments_result
+run @tools.acli jira workitem comment list --key @state.ticket_id --json --paginate as @comments_result
 
-DO Parse @comments_result.stdout as JSON. Check material clarifications and
+do Parse @comments_result.stdout as JSON. Check material clarifications and
     identical estimate comments against @state.text. Return an object with
     Boolean evidence_contradicts_draft and identical_comment, and duplicate_url.
-    Never replace unrelated comments. AS comment_state
+    Never replace unrelated comments. as @comment_state
 
-IF @comment_state.evidence_contradicts_draft == TRUE
-    RETURN "Publication stopped: Jira evidence contradicts the draft. Run /inux estimate improve with the new evidence; the draft is unchanged."
+if @comment_state.evidence_contradicts_draft == true
+    return "Publication stopped: Jira evidence contradicts the draft. Run /inux estimate improve with the new evidence; the draft is unchanged."
 
-IF @comment_state.identical_comment == FALSE
-    DO Publish @state.text as one bounded transaction following @tool_guidance.
+if @comment_state.identical_comment == false
+    do Publish @state.text as one bounded transaction following @tool_guidance.
         Create a unique private temporary directory and .adf output path. Run @tools.adf
         with separate arguments @state.path and the output path; verify faithful
         conversion. Immediately recheck active project, ticket, and saved text
@@ -39,15 +38,15 @@ IF @comment_state.identical_comment == FALSE
         jira, workitem, comment, create, --key, @state.ticket_id, --body-file,
         the ADF path, and --json. Parse and verify the comment URL, looking it up
         only if absent. Clean only this transaction's temporary directory on
-        success or failure. Return the verified URL. AS publication_url
-ELSE
-    SET publication_url = @comment_state.duplicate_url
+        success or failure. Return the verified URL. as @publication_url
+else
+    set publication_url = @comment_state.duplicate_url
 
-DO Verify @publication_url identifies the published or identical existing
+do Verify @publication_url identifies the published or identical existing
     comment for @state.ticket_id. Keep the Markdown on an uncertain result.
 
-DO Apply verified-publication cleanup to @state.path under @draft_rules,
+do Apply verified-publication cleanup to @state.path under @draft_rules,
     preserving the file if it no longer matches @state.text. Return the cleanup
-    result, including any retained path. AS cleanup_result
+    result, including any retained path. as @cleanup_result
 
-PRINT Report @state.ticket_id, @publication_url, and @cleanup_result briefly.
+print Report @state.ticket_id, @publication_url, and @cleanup_result briefly.

@@ -1,207 +1,199 @@
-USE ../knowledge/summary-knowledge.flow
-USE ../knowledge/draft-knowledge.flow
-USE ../knowledge/tool-knowledge.flow
-USE pr-git-rules.flow
+use ../knowledge/summary-knowledge.flow
+use ../knowledge/draft-knowledge.flow
+use ../knowledge/tool-knowledge.flow
+use pr-git-rules.flow
 
-DO Verify @request explicitly requests PR publication.
+do Verify @request explicitly requests PR publication.
 
-DO Resolve the explicit project or current checkout and active ticket from
+do Resolve the explicit project or current checkout and active ticket from
     @request or conversation. Reject supplied-ID mismatches. Return an object
-    with project, ticket_id (NULL if unknown), and ticket (complete matching
-    cached Jira object or NULL). AS task_context
+    with project, ticket_id (null if unknown), and ticket (complete matching
+    cached Jira object or null). as @task_context
 
-IF @task_context.ticket_id == NULL
-    ASK "Which Jira ticket should this work use?" AS ticket_input
-    DO Validate @ticket_input against the active task and return @task_context
-        updated with that one Jira ID. AS task_context
+if @task_context.ticket_id == null
+    ask "Which Jira ticket should this work use?" as @ticket_input
+    do Validate @ticket_input against the active task and return @task_context
+        updated with that one Jira ID. as @task_context
 
-SET project = @task_context.project
-SET ticket_id = @task_context.ticket_id
-SET ticket = @task_context.ticket
+set project = @task_context.project
+set ticket_id = @task_context.ticket_id
+set ticket = @task_context.ticket
 
-DO Retain the verified project, ticket ID, and any complete cached ticket as
+do Retain the verified project, ticket ID, and any complete cached ticket as
     this conversation's active task without remote calls or task files.
 
-DO Resolve and read the pr.md draft for @project and @ticket_id under
+do Resolve and read the pr.md draft for @project and @ticket_id under
     @draft_rules. Require an existing selected draft.
-    Return an object with path and text. AS draft_state
+    Return an object with path and text. as @draft_state
 
-SET draft_path = @draft_state.path
-SET saved_draft = @draft_state.text
+set draft_path = @draft_state.path
+set saved_draft = @draft_state.text
 
-DO Read applicable project AGENTS.md and explicit user naming overrides.
-    Current rules take precedence over old conversation conventions. AS project_rules
+do Read applicable project AGENTS.md and explicit user naming overrides.
+    Current rules take precedence over old conversation conventions. as @project_rules
 
-IF @ticket == NULL
-    DO Resolve private absolute acli using @tool_guidance. Return its path. AS acli
-    RUN @acli jira workitem view @ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json
-    AS ticket_result
-    DO Parse @ticket_result.stdout as JSON, verify its key equals @ticket_id and
+if @ticket == null
+    do Resolve private absolute acli using @tool_guidance. Return its path. as @acli
+
+    run @acli jira workitem view @ticket_id --fields "key,issuetype,summary,status,assignee,description,attachment" --json as @ticket_result
+
+    do Parse @ticket_result.stdout as JSON, verify its key equals @ticket_id and
         requested details are complete, and retain the full ticket and project.
-        Return the complete object. AS ticket
+        Return the complete object. as @ticket
 
-PRINT """
+print """
 - [ ] Git validation
 - [ ] Evidence/verification
 - [ ] Save/publication
 """
 
-DO Read @request and prior explicit choices for this PR. Return the explicitly
-    selected target branch or NULL. Never infer a target from defaults or
-    existing PRs. AS target
+do Read @request and prior explicit choices for this PR. Return the explicitly
+    selected target branch or null. Never infer a target from defaults or
+    existing PRs. as @target
 
-IF @target == NULL
-    ASK "Which destination branch should this PR target?" AS target
+if @target == null
+    ask "Which destination branch should this PR target?" as @target
 
-IF @target == ""
-    RETURN "PR publication requires an explicitly selected destination branch."
+if @target == ""
+    return "PR publication requires an explicitly selected destination branch."
 
-DO Validate @project for explicit @target and @ticket_id under @git_rules and
+do Validate @project for explicit @target and @ticket_id under @git_rules and
     @project_rules. Inspect branch, HEAD, remotes, full status, and Git operation
     state; fetch the selected target and resolve its exact revision and merge base.
     Return an object with current_branch, checked_head, repository, push_remote,
     target_remote, target_ref, target_revision, merge_base, and commit_range
-    containing the literal target_ref..HEAD range. AS git_state
+    containing the literal target_ref..HEAD range. as @git_state
 
-RUN git -C @project log --reverse "--format=%H%n%B%x00" @git_state.commit_range
-AS commits_result
+run git -C @project log --reverse "--format=%H%n%B%x00" @git_state.commit_range as @commits_result
 
-DO Parse every SHA and full message from @commits_result.stdout, including merges.
+do Parse every SHA and full message from @commits_result.stdout, including merges.
     Preserve whitespace except separators and one terminal newline. Verify the
     nonempty range and all messages against @git_rules and @project_rules for
-    @ticket_id. Return ordered messages and SHAs. AS checked_messages
+    @ticket_id. Return ordered messages and SHAs. as @checked_messages
 
-PRINT """
+print """
 - [x] Git validation
 - [ ] Evidence/verification
 - [ ] Save/publication
 """
 
-DO Use @ticket and @saved_draft. Return an object with the complete ticket
-    and exact saved_pr. AS documents
+do Use @ticket and @saved_draft. Return an object with the complete ticket
+    and exact saved_pr. as @documents
 
-DO Verify @documents.saved_pr has @ticket_id, one complete single-line title,
+do Verify @documents.saved_pr has @ticket_id, one complete single-line title,
     and a placeholder-free Description satisfying @summary_rules. Do not draft
     or rewrite invalid content.
 
-RUN git -C @project diff --find-renames @git_state.merge_base @git_state.checked_head
-AS diff_result
+run git -C @project diff --find-renames @git_state.merge_base @git_state.checked_head as @diff_result
 
-DO Review @diff_result.stdout and relevant code read-only. Verify
+do Review @diff_result.stdout and relevant code read-only. Verify
     @checked_messages and @documents.saved_pr against implementation evidence.
     Follow exact imports or symbols into direct dependencies only for material
-    gaps. Return an object with evidence, material_concerns, and observed_checks. AS review
+    gaps. Return an object with evidence, material_concerns, and observed_checks. as @review
 
-DO Run only missing project-required checks for the current code and inputs,
+do Run only missing project-required checks for the current code and inputs,
     reusing unchanged observed results. Inspect one targeted manifest or
     Makefile only when needed. Probe runtime health only after an actual failure.
-    Retain every exit and never mask failures. Return the verification results. AS verification
+    Retain every exit and never mask failures. Return the verification results. as @verification
 
-DO Verify @review has no unresolved material correctness concern, @verification
+do Verify @review has no unresolved material correctness concern, @verification
     passed all required checks, @checked_messages and @documents.saved_pr agree
     with the full diff, and the ticket work is complete.
 
-PRINT """
+print """
 - [x] Git validation
 - [x] Evidence/verification
 - [ ] Save/publication
 """
 
-DO Resolve private absolute gh using @tool_guidance.
-    Return an object with gh. AS tools
+do Resolve private absolute gh using @tool_guidance.
+    Return an object with gh. as @tools
 
-RUN @tools.gh auth status
-AS authentication
+run @tools.gh auth status as @authentication
 
-SET selected_branch = @git_state.current_branch
+set selected_branch = @git_state.current_branch
 
-RUN @tools.gh pr list --repo @git_state.repository --head @git_state.current_branch --state open --json "url,baseRefName,headRefName,title,isDraft,assignees,reviewRequests"
-AS pr_list_result
+run @tools.gh pr list --repo @git_state.repository --head @git_state.current_branch --state open --json "url,baseRefName,headRefName,title,isDraft,assignees,reviewRequests" as @pr_list_result
 
-RUN @tools.gh api user --jq .login
-AS user_result
+run @tools.gh api user --jq .login as @user_result
 
-DO Parse @pr_list_result.stdout and @user_result.stdout. Return an object with
+do Parse @pr_list_result.stdout and @user_result.stdout. Return an object with
     candidate_prs containing every inspected PR URL, target, and head;
     pr_choice_is_clear; existing_pr_url only when zero or one candidate makes
     the choice unambiguous; authenticated_user; target set to @target; and
-    target_changed set to FALSE. Multiple existing PRs or a differing existing
-    target makes the choice unclear. AS publication_state
+    target_changed set to false. Multiple existing PRs or a differing existing
+    target makes the choice unclear. as @publication_state
 
-IF @publication_state.pr_choice_is_clear == FALSE
-    ASK "Clarify the existing PR to update and any differing target before publication:" AS pr_choice
+if @publication_state.pr_choice_is_clear == false
+    ask "Clarify the existing PR to update and any differing target before publication:" as @pr_choice
 
-    DO Resolve only an explicit existing PR URL and explicit destination branch
+    do Resolve only an explicit existing PR URL and explicit destination branch
         from @pr_choice and @publication_state. Require the selected URL to match
         exactly one member of @publication_state.candidate_prs for @git_state.repository
         and @git_state.current_branch; never infer either value. Return an object retaining
-        candidate_prs with pr_choice_is_clear, existing_pr_url or NULL,
-        authenticated_user, target, and target_changed. AS publication_state
+        candidate_prs with pr_choice_is_clear, existing_pr_url or null,
+        authenticated_user, target, and target_changed. as @publication_state
 
-IF @publication_state.pr_choice_is_clear != TRUE
-    RETURN "PR publication stopped because the existing PR choice is unclear."
+if @publication_state.pr_choice_is_clear != true
+    return "PR publication stopped because the existing PR choice is unclear."
 
-SET existing_pr_url = @publication_state.existing_pr_url
-SET authenticated_user = @publication_state.authenticated_user
-SET target = @publication_state.target
+set existing_pr_url = @publication_state.existing_pr_url
+set authenticated_user = @publication_state.authenticated_user
+set target = @publication_state.target
 
-IF @target == ""
-    RETURN "PR publication stopped because the destination branch is empty."
+if @target == ""
+    return "PR publication stopped because the destination branch is empty."
 
-IF @publication_state.target_changed == TRUE
-    DO Validate @project for explicit @target and @ticket_id under @git_rules and
+if @publication_state.target_changed == true
+    do Validate @project for explicit @target and @ticket_id under @git_rules and
         @project_rules. Inspect branch, HEAD, remotes, full status, and Git operation
         state; fetch the selected target and resolve its exact revision and merge base.
         Return an object with current_branch, checked_head, repository, push_remote,
         target_remote, target_ref, target_revision, merge_base, and commit_range
-        containing the literal target_ref..HEAD range. AS git_state
+        containing the literal target_ref..HEAD range. as @git_state
 
-    RUN git -C @project log --reverse "--format=%H%n%B%x00" @git_state.commit_range
-    AS commits_result
+    run git -C @project log --reverse "--format=%H%n%B%x00" @git_state.commit_range as @commits_result
 
-    DO Parse every SHA and full message from @commits_result.stdout, including merges.
+    do Parse every SHA and full message from @commits_result.stdout, including merges.
         Preserve whitespace except separators and one terminal newline. Verify the
         nonempty range and all messages against @git_rules and @project_rules for
-        @ticket_id. Return ordered messages and SHAs. AS checked_messages
+        @ticket_id. Return ordered messages and SHAs. as @checked_messages
 
-    RUN git -C @project diff --find-renames @git_state.merge_base @git_state.checked_head
-    AS diff_result
+    run git -C @project diff --find-renames @git_state.merge_base @git_state.checked_head as @diff_result
 
-    DO Review @diff_result.stdout and relevant code read-only. Verify
+    do Review @diff_result.stdout and relevant code read-only. Verify
         @checked_messages and @documents.saved_pr against implementation evidence.
         Follow exact imports or symbols into direct dependencies only for material
-        gaps. Return an object with evidence, material_concerns, and observed_checks. AS review
+        gaps. Return an object with evidence, material_concerns, and observed_checks. as @review
 
-    DO Run only missing project-required checks for the current code and inputs,
+    do Run only missing project-required checks for the current code and inputs,
         reusing unchanged observed results only when still valid for the new target.
         Inspect one targeted manifest or Makefile only when needed. Probe runtime
         health only after an actual failure. Retain every exit and never mask
-        failures. Return the verification results. AS verification
+        failures. Return the verification results. as @verification
 
-    DO Verify @review has no unresolved material correctness concern, @verification
+    do Verify @review has no unresolved material correctness concern, @verification
         passed all required checks, @checked_messages and @documents.saved_pr agree
         with the full diff, and the ticket work is complete.
 
-DO Verify @git_state.current_branch still equals @selected_branch and any selected
+do Verify @git_state.current_branch still equals @selected_branch and any selected
     existing PR still belongs to this repository and branch.
 
-DO Extract only title and Description from @documents.saved_pr, preserving
-    Description Markdown exactly. Return an object with title and description. AS draft_fields
+do Extract only title and Description from @documents.saved_pr, preserving
+    Description Markdown exactly. Return an object with title and description. as @draft_fields
 
-DO Immediately re-read branch, HEAD, @git_state.target_ref revision, active task context, Git
+do Immediately re-read branch, HEAD, @git_state.target_ref revision, active task context, Git
     operation state, full index and tree, and @draft_path. Revalidate only changed
     dependencies. Verify they still match @git_state.checked_head, @git_state.target_revision,
-    @ticket_id, @documents.saved_pr, @review, and @verification. AS final_gate
+    @ticket_id, @documents.saved_pr, @review, and @verification. as @final_gate
 
-RUN git -C @project push @git_state.push_remote @git_state.current_branch
-AS push_result
+run git -C @project push @git_state.push_remote @git_state.current_branch as @push_result
 
-RUN git -C @project ls-remote @git_state.push_remote @git_state.current_branch
-AS remote_result
+run git -C @project ls-remote @git_state.push_remote @git_state.current_branch as @remote_result
 
-DO Parse @remote_result.stdout and verify the pushed branch SHA equals @git_state.checked_head.
+do Parse @remote_result.stdout and verify the pushed branch SHA equals @git_state.checked_head.
 
-DO Create or update the selected PR as one bounded transaction using @tools.gh.
+do Create or update the selected PR as one bounded transaction using @tools.gh.
     Write @draft_fields.description unchanged as UTF-8 in one unique private
     temporary directory and pass that file with --body-file. For a new PR use
     pr create with --repo @git_state.repository, --base @target, --head
@@ -209,28 +201,26 @@ DO Create or update the selected PR as one bounded transaction using @tools.gh.
     --title @draft_fields.title. For an existing PR use pr edit @existing_pr_url with --repo,
     --base, --title, --body-file, and --add-assignee using the same values.
     Pass arguments separately. Verify and return the PR URL; clean only this
-    transaction's temporary directory on success or failure. AS pr_url
+    transaction's temporary directory on success or failure. as @pr_url
 
-RUN @tools.gh pr edit @pr_url --repo @git_state.repository --add-reviewer "@copilot"
-AS reviewer_result
+run @tools.gh pr edit @pr_url --repo @git_state.repository --add-reviewer "@copilot" as @reviewer_result
 
-RUN @tools.gh pr view @pr_url --repo @git_state.repository --json "url,state,isDraft,assignees,reviewRequests"
-AS published_state_result
+run @tools.gh pr view @pr_url --repo @git_state.repository --json "url,state,isDraft,assignees,reviewRequests" as @published_state_result
 
-DO Parse @published_state_result.stdout. Verify @authenticated_user
+do Parse @published_state_result.stdout. Verify @authenticated_user
     is assigned and the Copilot review request is accepted or already recorded.
-    Return an object with the verified url and publication state. AS publication
+    Return an object with the verified url and publication state. as @publication
 
-DO Attach @publication.url to this chat when the host supports PR artifacts.
+do Attach @publication.url to this chat when the host supports PR artifacts.
 
-DO Apply verified-publication cleanup to @draft_path under @draft_rules,
+do Apply verified-publication cleanup to @draft_path under @draft_rules,
     preserving it if it no longer matches @documents.saved_pr. Return the cleanup
-    result including any retained path. AS cleanup_result
+    result including any retained path. as @cleanup_result
 
-PRINT """
+print """
 - [x] Git validation
 - [x] Evidence/verification
 - [x] Save/publication
 """
 
-PRINT Report @publication, @review.observed_checks, @cleanup_result, blockers, gaps, and partial success briefly.
+print Report @publication, @review.observed_checks, @cleanup_result, blockers, gaps, and partial success briefly.

@@ -1,4 +1,4 @@
-CONTEXT
+context
     Version: 2.102.0
 
     darwin/amd64 https://github.com/cli/cli/releases/download/v2.102.0/gh_2.102.0_macOS_amd64.zip
@@ -6,33 +6,33 @@ CONTEXT
     linux/amd64 https://github.com/cli/cli/releases/download/v2.102.0/gh_2.102.0_linux_amd64.tar.gz
     linux/arm64 https://github.com/cli/cli/releases/download/v2.102.0/gh_2.102.0_linux_arm64.tar.gz
     windows/amd64 https://github.com/cli/cli/releases/download/v2.102.0/gh_2.102.0_windows_amd64.zip
-AS github_release
+as @github_release
 
-DO Resolve the GitHub CLI version from @options.gh_version when non-NULL,
+do Resolve the GitHub CLI version from @options.gh_version when non-null,
     otherwise the Version entry in @github_release. Select its exact URL for
     @platform.os and @platform.arch. For a version override, replace only the
-    default version in that URL. Return an object with version and url. AS github_package
+    default version in that URL. Return an object with version and url. as @github_package
 
-PRINT "Step 1 of 3: Set up GitHub CLI (gh)."
+print "Step 1 of 3: Set up GitHub CLI (gh)."
 
-DO Probe only @host.gh. Match the parsed version exactly to @github_package.version
+do Probe only @host.gh. Match the parsed version exactly to @github_package.version
     and check auth status for github.com. Treat missing, broken, or mismatched
-    installations as not ready, and missing authentication as FALSE. Return an
-    object with path, version, and Boolean ready and authenticated. AS github
+    installations as not ready, and missing authentication as false. Return an
+    object with path, version, and Boolean ready and authenticated. as @github
 
-IF @github.ready is FALSE
-    DO Download and extract @github_package.url; install at @host.gh using @install_rules.
+if @github.ready is false
+    do Download and extract @github_package.url; install at @host.gh using @install_rules.
         Require @github_package.version. Return an object with path, verified version,
-        ready TRUE, and Boolean authenticated from auth status for github.com. AS github
+        ready true, and Boolean authenticated from auth status for github.com. as @github
 
-IF @github.authenticated is FALSE
-    PRINT "Complete GitHub sign-in in the browser opened by the CLI. Its login URL or device code will be available in the terminal. Keep that terminal open until sign-in finishes."
-    DO Run @host.gh auth login --hostname github.com --git-protocol https --web
+if @github.authenticated is false
+    print "Complete GitHub sign-in in the browser opened by the CLI. Its login URL or device code will be available in the terminal. Keep that terminal open until sign-in finishes."
+    do Run @host.gh auth login --hostname github.com --git-protocol https --web
         --skip-ssh-key in one user-visible interactive terminal session. Keep
         that session alive and wait for the process to exit successfully;
         never detach or background it. Then require @host.gh auth status
         --hostname github.com to succeed. Keep CLI-managed credentials without
         requesting or exposing tokens. If a persistent interactive session is
-        unavailable, fail this instruction. Return @github with authenticated TRUE. AS github
+        unavailable, fail this instruction. Return @github with authenticated true. as @github
 
-PRINT Report the verified GitHub CLI version, path, and authentication state from @github.
+print Report the verified GitHub CLI version, path, and authentication state from @github.

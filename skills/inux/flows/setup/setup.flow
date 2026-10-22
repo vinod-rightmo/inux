@@ -1,4 +1,4 @@
-PRINT """Welcome to Inux!
+print """Welcome to Inux!
 
 Setup runs one step at a time:
 1. GitHub CLI (gh): download the pinned version, sign in through your browser, and verify access.
@@ -10,58 +10,57 @@ After each verified step, type done to continue. Any other reply stops setup.
 If a step fails, setup stops there and reports the error with its source line.
 """
 
-CONTEXT
+context
     Install only at the specified private path, using a unique private temporary
     directory. Create missing parents only as needed. Verify the requested checks
     and executable permissions before replacing a working tool. Remove only that
     temporary directory on success or failure, plus newly created parents that
     remain empty on failure.
-AS install_rules
+as @install_rules
 
-DO Resolve setup inputs. Return an object with windows TRUE only on Windows;
-    storage from its explicit override or NULL; and repository, adf_ref,
-    gh_version, and acli_version from explicit overrides or NULL. Normalize
-    non-NULL gh/acli version overrides without a leading v. AS options
+do Resolve setup inputs. Return an object with windows true only on Windows;
+    storage from its explicit override or null; and repository, adf_ref,
+    gh_version, and acli_version from explicit overrides or null. Normalize
+    non-null gh/acli version overrides without a leading v. as @options
 
-IF @options.windows is TRUE
-    RUN powershell.exe -NoProfile -NonInteractive -Command "[Environment]::GetFolderPath('UserProfile'); Write-Output 'windows'; [Runtime.InteropServices.RuntimeInformation]::OSArchitecture"
-    AS host_result
+if @options.windows is true
+    run powershell.exe -NoProfile -NonInteractive -Command "[Environment]::GetFolderPath('UserProfile'); Write-Output 'windows'; [Runtime.InteropServices.RuntimeInformation]::OSArchitecture" as @host_result
 
-    DO Parse @host_result.stdout into an object with home, os, and arch. Normalize
-        AMD64/X64 to amd64 and ARM64 to arm64. Require windows on amd64. AS platform
-ELSE
-    RUN sh
+    do Parse @host_result.stdout into an object with home, os, and arch. Normalize
+        AMD64/X64 to amd64 and ARM64 to arm64. Require windows on amd64. as @platform
+else
+    run sh
         printf '%s\n' "$HOME"
         uname -s
         uname -m
-    AS host_result
+    as @host_result
 
-    DO Parse @host_result.stdout into an object with home, os, and arch. Normalize
+    do Parse @host_result.stdout into an object with home, os, and arch. Normalize
         Darwin to darwin, Linux to linux, x86_64 to amd64, and aarch64 to arm64.
-        Require darwin or linux on amd64 or arm64. AS platform
+        Require darwin or linux on amd64 or arm64. as @platform
 
-DO Resolve absolute bin as <storage>/tools/bin, with private gh, adf, and acli
-    paths under bin (.exe on Windows). Use @options.storage when non-NULL,
+do Resolve absolute bin as <storage>/tools/bin, with private gh, adf, and acli
+    paths under bin (.exe on Windows). Use @options.storage when non-null,
     otherwise <home>/.inux with home from @platform.home. Return an object
-    with bin, gh, adf, and acli. AS host
+    with bin, gh, adf, and acli. as @host
 
-USE setup-gh.flow
-ASK "GitHub CLI is ready and authenticated. Type done to continue to adf, or anything else to stop." AS github_confirmation
+use setup-gh.flow
+ask "GitHub CLI is ready and authenticated. Type done to continue to adf, or anything else to stop." as @github_confirmation
 
-IF @github_confirmation is not exactly "done"
-    RETURN "Setup stopped after GitHub CLI."
+if @github_confirmation is not exactly "done"
+    return "Setup stopped after GitHub CLI."
 
-USE setup-adf.flow
-ASK "ADF converter is ready. Type done to continue to Atlassian CLI, or anything else to stop." AS adf_confirmation
+use setup-adf.flow
+ask "ADF converter is ready. Type done to continue to Atlassian CLI, or anything else to stop." as @adf_confirmation
 
-IF @adf_confirmation is not exactly "done"
-    RETURN "Setup stopped after ADF converter."
+if @adf_confirmation is not exactly "done"
+    return "Setup stopped after ADF converter."
 
-USE setup-acli.flow
-ASK "Atlassian CLI is ready and authenticated. Type done to finish setup, or anything else to stop." AS atlassian_confirmation
+use setup-acli.flow
+ask "Atlassian CLI is ready and authenticated. Type done to finish setup, or anything else to stop." as @atlassian_confirmation
 
-IF @atlassian_confirmation is not exactly "done"
-    RETURN "Setup stopped after Atlassian CLI."
+if @atlassian_confirmation is not exactly "done"
+    return "Setup stopped after Atlassian CLI."
 
-PRINT Report the GitHub and Atlassian versions and authentication states from @github and @atlassian, the verified converter at @converter.path, and @host.bin in a compact table.
-RETURN "Inux setup is complete."
+print Report the GitHub and Atlassian versions and authentication states from @github and @atlassian, the verified converter at @converter.path, and @host.bin in a compact table.
+return "Inux setup is complete."

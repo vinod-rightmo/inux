@@ -1,4 +1,4 @@
-CONTEXT
+context
     Select only the exact path supplied by the user or recorded in this conversation
     for the canonical project, Jira ticket, and draft kind. Reject mismatches or
     ambiguous selection; never scan temporary directories or infer a ticket from a
@@ -20,4 +20,4 @@ CONTEXT
     Git readiness, or tool checks. Never follow links. Remove only an empty directory
     owned by this workflow; forget only the cleaned record. Preserve other drafts and
     report cleanup failures or retained paths. A new task does not clean old drafts.
-AS draft_rules
+as @draft_rules

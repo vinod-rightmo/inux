@@ -1,95 +1,99 @@
-DO Resolve the absolute project. Read branch, HEAD, porcelain status, and active
+do Resolve the absolute project. Read branch, HEAD, porcelain status, and active
     Git operation state. Return an object with project, branch, attached_head,
-    conflicts, active_operation, and changes_present. AS context
+    conflicts, active_operation, and changes_present. as @context
 
-DO Verify @context has an attached HEAD, no unresolved conflicts, and no active
+do Verify @context has an attached HEAD, no unresolved conflicts, and no active
     merge, rebase, cherry-pick, or revert.
 
-IF @context.changes_present == FALSE
-    RETURN "There are no changes to commit."
+if @context.changes_present == false
+    return "There are no changes to commit."
 
-DO Resolve the absolute project and active Jira ticket ID from the explicit
+do Resolve the absolute project and active Jira ticket ID from the explicit
     request or this conversation's task context. Reject a supplied-ID mismatch
     with the active task. Do not infer a task from a temporary filename or search
-    for task files. Return an object with project, ticket_id (NULL if unknown),
-    and ticket containing the complete previously loaded Jira object or NULL. AS task_context
+    for task files. Return an object with project, ticket_id (null if unknown),
+    and ticket containing the complete previously loaded Jira object or null. as @task_context
 
-IF @task_context.ticket_id == NULL
-    ASK "Which Jira ticket should this work use?" AS ticket_input
+if @task_context.ticket_id == null
+    ask "Which Jira ticket should this work use?" as @ticket_input
 
-    DO Validate @ticket_input as one Jira ticket ID and return @task_context
-        with that ticket_id. AS task_context
+    do Validate @ticket_input as one Jira ticket ID and return @task_context
+        with that ticket_id. as @task_context
 
-SET project = @task_context.project
-SET ticket_id = @task_context.ticket_id
-SET ticket = @task_context.ticket
+set project = @task_context.project
+set ticket_id = @task_context.ticket_id
+set ticket = @task_context.ticket
 
-DO Verify any available @ticket identifies @ticket_id and retain @project,
+do Verify any available @ticket identifies @ticket_id and retain @project,
     @ticket_id, and any complete ticket as this conversation's active task.
     Resolve identity locally; do not call Jira or write task files.
 
-IF @ticket == NULL
-    RETURN "Commit requires complete ticket context. Load it with /inux task <id>, then retry."
+if @ticket == null
+    return "Commit requires complete ticket context. Load it with /inux task <id>, then retry."
 
-DO Verify @ticket_id is valid, any supplied ID matches it, and
+do Verify @ticket_id is valid, any supplied ID matches it, and
     @context.branch contains the exact case-sensitive ticket token without
     making it part of a longer ID.
 
-DO Read complete staged and unstaged diffs plus relevant untracked files.
+do Read complete staged and unstaged diffs plus relevant untracked files.
     Understand what changed using @ticket and code context. Select requested or
     clearly related ticket changes. Return an object with clear, selected
-    changes, and excluded changes. AS scope
+    changes, and excluded changes. as @scope
 
-IF @scope.clear == FALSE
-    ASK "Which changes should be committed, including already staged changes?" AS scope_input
+if @scope.clear == false
+    ask "Which changes should be committed, including already staged changes?" as @scope_input
 
-    DO Resolve @scope from @scope_input. Return an updated object with clear,
-        selected changes, and excluded changes. AS scope
+    do Resolve @scope from @scope_input. Return an updated object with clear,
+        selected changes, and excluded changes. as @scope
 
-IF @scope.clear != TRUE
-    RETURN "Commit stopped because the intended change scope is unclear."
+if @scope.clear != true
+    return "Commit stopped because the intended change scope is unclear."
 
-DO Verify @scope excludes unrelated staged changes and unintended secrets or
+do Verify @scope excludes unrelated staged changes and unintended secrets or
     artifacts.
 
-DO Group @scope.selected changes by purpose, with dependencies first. Draft one
+do Group @scope.selected changes by purpose, with dependencies first. Draft one
     commit for related changes and separate commits for independent purposes.
     Every message must be one line <TICKET-ID>: <Capitalized present-tense
     summary> using @ticket_id exactly once, followed by colon and one
     space, with no body or extra prefix. Return an object with ordered groups
-    and commit_count. AS commit_plan
+    and commit_count. as @commit_plan
 
-DO Run only missing repository-required verification for @scope.selected,
+do Run only missing repository-required verification for @scope.selected,
     reusing results for unchanged content and keeping repository hooks enabled.
-    Return the observed verification results. AS verification
+    Return the observed verification results. as @verification
 
-DO Verify @verification passed every required check.
+do Verify @verification passed every required check.
 
-SET commit_index = 0
-SET completed_commits = []
+set commit_index = 0
+set completed_commits = []
 
-REPEAT @commit_plan.commit_count TIMES
-    DO Select the group at @commit_index from @commit_plan.groups. Re-read the
+repeat @commit_plan.commit_count times
+    do Select the group at @commit_index from @commit_plan.groups. Re-read the
         active ticket ID and branch and verify both still match @ticket_id
         and @context.branch. Return the selected group with message, paths, and
-        hunks. AS group
+        hunks. as @group
 
-    DO Stage only @group.paths and @group.hunks. Preserve partial staging and
+    print "Proposed commit message:" @group.message
+    ask "Is this commit message good? Reply yes to approve; any other reply stops." as @message_approval
+
+    if @message_approval != "yes"
+        return "Commit stopped because the message was not approved."
+
+    do Stage only @group.paths and @group.hunks. Preserve partial staging and
         unrelated work and index entries. Fail if safe separation is impossible.
 
-    RUN git -C @context.project diff --cached --check
-    AS staged_check
+    run git -C @context.project diff --cached --check as @staged_check
 
-    DO Read the full staged diff. Verify it is nonempty, exactly @group,
+    do Read the full staged diff. Verify it is nonempty, exactly @group,
         covered by @verification, and accurately described by @group.message.
 
-    RUN git -C @context.project commit -m @group.message
-    AS commit_result
+    run git -C @context.project commit -m @group.message as @commit_result
 
-    DO Read the created commit SHA and remaining status. Append an object with
+    do Read the created commit SHA and remaining status. Append an object with
         the SHA and @group.message to @completed_commits and return the updated
-        array. AS completed_commits
+        array. as @completed_commits
 
-    SET commit_index = @commit_index + 1
+    set commit_index = @commit_index + 1
 
-PRINT Report @completed_commits and any remaining changes. Include completed commits if a later group failed.
+print Report @completed_commits and any remaining changes. Include completed commits if a later group failed.

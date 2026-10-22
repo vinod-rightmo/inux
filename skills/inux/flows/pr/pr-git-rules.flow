@@ -1,4 +1,4 @@
-CONTEXT
+context
     Preparation and publication require an attached HEAD, a fully clean index and
     tree including untracked files and submodules, and no merge, rebase, cherry-pick,
     or revert. Resolve operation markers through Git for worktrees. The task branch
@@ -25,4 +25,4 @@ CONTEXT
     checks must pass, material correctness concerns must be resolved, and ticket work
     must be complete. Recheck branch, HEAD, target revision, task, Git operation state,
     full index/tree, and saved draft immediately before saving or publication.
-AS git_rules
+as @git_rules

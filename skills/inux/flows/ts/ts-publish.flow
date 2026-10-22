@@ -1,51 +1,50 @@
-USE ../knowledge/summary-knowledge.flow
-USE ../knowledge/draft-knowledge.flow
-USE ../knowledge/tool-knowledge.flow
+use ../knowledge/summary-knowledge.flow
+use ../knowledge/draft-knowledge.flow
+use ../knowledge/tool-knowledge.flow
 
-DO Resolve the explicit project or current checkout and active ticket from
+do Resolve the explicit project or current checkout and active ticket from
     @request or conversation. Reject supplied-ID mismatches. Return an object
-    with project, ticket_id (NULL if unknown), and ticket (complete matching
-    cached Jira object or NULL). AS task_context
+    with project, ticket_id (null if unknown), and ticket (complete matching
+    cached Jira object or null). as @task_context
 
-IF @task_context.ticket_id == NULL
-    ASK "Which Jira ticket should this work use?" AS ticket_input
-    DO Validate @ticket_input against the active task and return @task_context
-        updated with that one Jira ID. AS task_context
+if @task_context.ticket_id == null
+    ask "Which Jira ticket should this work use?" as @ticket_input
+    do Validate @ticket_input against the active task and return @task_context
+        updated with that one Jira ID. as @task_context
 
-SET project = @task_context.project
-SET ticket_id = @task_context.ticket_id
-SET ticket = @task_context.ticket
+set project = @task_context.project
+set ticket_id = @task_context.ticket_id
+set ticket = @task_context.ticket
 
-DO Retain the verified project, ticket ID, and any complete cached ticket as
+do Retain the verified project, ticket ID, and any complete cached ticket as
     this conversation's active task without remote calls or task files.
 
-DO Resolve and read the technical-summary.md draft for @project and @ticket_id under
+do Resolve and read the technical-summary.md draft for @project and @ticket_id under
     @draft_rules. Require an existing selected draft.
-    Return an object with path and text. AS draft_state
+    Return an object with path and text. as @draft_state
 
-SET draft_path = @draft_state.path
-SET saved_draft = @draft_state.text
+set draft_path = @draft_state.path
+set saved_draft = @draft_state.text
 
-DO Verify @request explicitly requests publication and @saved_draft has the
+do Verify @request explicitly requests publication and @saved_draft has the
     matching @ticket_id with complete, placeholder-free content satisfying
     @summary_rules. Do not create or rewrite invalid content.
 
-DO Resolve private absolute acli and adf using @tool_guidance.
-    Return an object with acli and adf. AS tools
+do Resolve private absolute acli and adf using @tool_guidance.
+    Return an object with acli and adf. as @tools
 
-RUN @tools.acli jira workitem comment list --key @ticket_id --json --paginate
-AS comments_result
+run @tools.acli jira workitem comment list --key @ticket_id --json --paginate as @comments_result
 
-DO Parse @comments_result.stdout as JSON. Check for duplicate summaries and
+do Parse @comments_result.stdout as JSON. Check for duplicate summaries and
     material clarifications. Return an object with Boolean
     evidence_contradicts_summary and identical_comment, and duplicate_url.
-    Never replace unrelated comments. AS comment_state
+    Never replace unrelated comments. as @comment_state
 
-IF @comment_state.evidence_contradicts_summary == TRUE
-    RETURN "Publication stopped: Jira evidence contradicts the summary. Run /inux ts improve with the new evidence; the draft is unchanged."
+if @comment_state.evidence_contradicts_summary == true
+    return "Publication stopped: Jira evidence contradicts the summary. Run /inux ts improve with the new evidence; the draft is unchanged."
 
-IF @comment_state.identical_comment == FALSE
-    DO Publish @saved_draft as one bounded transaction. Follow @tool_guidance.
+if @comment_state.identical_comment == false
+    do Publish @saved_draft as one bounded transaction. Follow @tool_guidance.
         Create one unique private temporary directory and .adf output path. Run @tools.adf
         with the separate arguments @draft_path and that path; verify the
         ADF faithfully represents @saved_draft. Immediately verify the active
@@ -54,15 +53,15 @@ IF @comment_state.identical_comment == FALSE
         arguments jira, workitem, comment, create, --key, @ticket_id, --body-file,
         the ADF path, and --json. Parse and verify the comment or ticket URL,
         looking it up only when absent. Remove only the unique temporary directory
-        before completing or failing. Return the verified URL. AS publication_url
-ELSE
-    SET publication_url = @comment_state.duplicate_url
+        before completing or failing. Return the verified URL. as @publication_url
+else
+    set publication_url = @comment_state.duplicate_url
 
-DO Verify @publication_url identifies the published or identical existing
+do Verify @publication_url identifies the published or identical existing
     comment for @ticket_id. Do not remove the Markdown on an uncertain result.
 
-DO Apply verified-publication cleanup to @draft_path under @draft_rules,
+do Apply verified-publication cleanup to @draft_path under @draft_rules,
     preserving it if it no longer matches @saved_draft. Return the cleanup result
-    including any retained path. AS cleanup_result
+    including any retained path. as @cleanup_result
 
-PRINT Report @ticket_id, @publication_url or verified duplicate status, and @cleanup_result briefly.
+print Report @ticket_id, @publication_url or verified duplicate status, and @cleanup_result briefly.

@@ -1,4 +1,4 @@
-CONTEXT
+context
     Write the summary in the requested destination, preserving its labels and order.
     Explain the result, mechanism, old behavior/cause, and relevant impacts or limits.
     Use only supported claims; report material uncertainty and incomplete work.
@@ -31,4 +31,4 @@ CONTEXT
     the completion report; claim success only when observed.
 
     The PR and standalone summary are independent drafts; never synchronize them automatically.
-AS summary_rules
+as @summary_rules

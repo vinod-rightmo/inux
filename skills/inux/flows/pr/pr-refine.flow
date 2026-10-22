@@ -1,48 +1,48 @@
-USE ../knowledge/summary-knowledge.flow
-USE ../knowledge/common-knowledge.flow
-USE ../knowledge/draft-knowledge.flow
+use ../knowledge/summary-knowledge.flow
+use ../knowledge/common-knowledge.flow
+use ../knowledge/draft-knowledge.flow
 
-DO Resolve the explicit project or current checkout and active ticket from
+do Resolve the explicit project or current checkout and active ticket from
     @request or conversation. Reject supplied-ID mismatches. Return an object
-    with project, ticket_id (NULL if unknown), and ticket (complete matching
-    cached Jira object or NULL). AS task_context
+    with project, ticket_id (null if unknown), and ticket (complete matching
+    cached Jira object or null). as @task_context
 
-IF @task_context.ticket_id == NULL
-    ASK "Which Jira ticket should this work use?" AS ticket_input
-    DO Validate @ticket_input against the active task and return @task_context
-        updated with that one Jira ID. AS task_context
+if @task_context.ticket_id == null
+    ask "Which Jira ticket should this work use?" as @ticket_input
+    do Validate @ticket_input against the active task and return @task_context
+        updated with that one Jira ID. as @task_context
 
-SET project = @task_context.project
-SET ticket_id = @task_context.ticket_id
-SET ticket = @task_context.ticket
+set project = @task_context.project
+set ticket_id = @task_context.ticket_id
+set ticket = @task_context.ticket
 
-DO Retain the verified project, ticket ID, and any complete cached ticket as
+do Retain the verified project, ticket ID, and any complete cached ticket as
     this conversation's active task without remote calls or task files.
 
-DO Resolve and read the pr.md draft for @project and @ticket_id under
+do Resolve and read the pr.md draft for @project and @ticket_id under
     @draft_rules. Require an existing selected draft.
-    Return an object with path and text. AS draft_state
+    Return an object with path and text. as @draft_state
 
-SET draft_path = @draft_state.path
-SET saved_draft = @draft_state.text
+set draft_path = @draft_state.path
+set saved_draft = @draft_state.text
 
-DO Read applicable project AGENTS.md and explicit user naming overrides.
-    Current rules take precedence over old conversation conventions. AS project_rules
+do Read applicable project AGENTS.md and explicit user naming overrides.
+    Current rules take precedence over old conversation conventions. as @project_rules
 
-DO Use @ticket and @saved_draft. Return an object with saved_pr and the exact
-    unrequested sections that must be preserved. AS documents
+do Use @ticket and @saved_draft. Return an object with saved_pr and the exact
+    unrequested sections that must be preserved. as @documents
 
-DO Check branch and HEAD in @project before reusing implementation evidence. Inspect
+do Check branch and HEAD in @project before reusing implementation evidence. Inspect
     committed changes only for material gaps. Do not fetch, choose a target, or
-    run a readiness pass. Return the evidence and observed checks. AS evidence
+    run a readiness pass. Return the evidence and observed checks. as @evidence
 
-DO Build an in-memory draft from @documents.saved_pr, @request, @evidence,
+do Build an in-memory draft from @documents.saved_pr, @request, @evidence,
     @writing_guidance, and @summary_rules. Refine only the requested Title line
     or Description. Preserve accurate notes and unrequested sections
-    byte-for-byte. Return an object with draft and unrelated_gaps. AS refinement
+    byte-for-byte. Return an object with draft and unrelated_gaps. as @refinement
 
-DO Save and verify @refinement.draft only to @draft_path under @draft_rules, using
+do Save and verify @refinement.draft only to @draft_path under @draft_rules, using
     @saved_draft as the concurrent-edit baseline. Verify the active project and
     ticket still match @project and @ticket_id.
 
-PRINT Report @draft_path, @evidence, and @refinement.unrelated_gaps briefly.
+print Report @draft_path, @evidence, and @refinement.unrelated_gaps briefly.

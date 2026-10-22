@@ -1,4 +1,4 @@
-CONTEXT
+context
     Final Estimate:      SP
 
     ## Complexity Breakdown
@@ -15,4 +15,4 @@ CONTEXT
     Total Complexity Score:
 
     ## Overall Reason
-AS estimate_template
+as @estimate_template

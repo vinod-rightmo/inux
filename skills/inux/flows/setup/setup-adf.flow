@@ -1,20 +1,20 @@
-CONTEXT
+context
     darwin/amd64 https://raw.githubusercontent.com/vinod-rightmo/inux/HEAD/bin/adf-darwin-amd64
     darwin/arm64 https://raw.githubusercontent.com/vinod-rightmo/inux/HEAD/bin/adf-darwin-arm64
     linux/amd64 https://raw.githubusercontent.com/vinod-rightmo/inux/HEAD/bin/adf-linux-amd64
     linux/arm64 https://raw.githubusercontent.com/vinod-rightmo/inux/HEAD/bin/adf-linux-arm64
     windows/amd64 https://raw.githubusercontent.com/vinod-rightmo/inux/HEAD/bin/adf-windows-amd64.exe
-AS converter_downloads
+as @converter_downloads
 
-DO Select the exact download URL from @converter_downloads for @platform.os and
-    @platform.arch. If @options.repository is non-NULL, replace vinod-rightmo/inux
-    in the URL with that repository. If @options.adf_ref is non-NULL, replace the
+do Select the exact download URL from @converter_downloads for @platform.os and
+    @platform.arch. If @options.repository is non-null, replace vinod-rightmo/inux
+    in the URL with that repository. If @options.adf_ref is non-null, replace the
     HEAD path segment with that branch or commit, preserving it as a URL path.
-    Return an object with url. AS converter_package
+    Return an object with url. as @converter_package
 
-PRINT "Step 2 of 3: Set up Markdown converter (adf)."
+print "Step 2 of 3: Set up Markdown converter (adf)."
 
-DO Download @converter_package.url and install at @host.adf as one bounded
+do Download @converter_package.url and install at @host.adf as one bounded
     transaction under @install_rules. Save the HTTP response bytes directly to a
     file in a unique private temporary directory and require a successful HTTP
     status; never print or text-decode the binary. Set executable permissions and
@@ -23,6 +23,6 @@ DO Download @converter_package.url and install at @host.adf as one bounded
     input. Compare the verified binary bytes with any installed copy; retain an
     identical copy or replace it at @host.adf. Preserve a working installation on
     failure. Clean only this transaction's temporary files on success or failure.
-    Return an object with path, ready TRUE, and Boolean updated. AS converter
+    Return an object with path, ready true, and Boolean updated. as @converter
 
-PRINT Report the verified converter path @converter.path and whether it was updated.
+print Report the verified converter path @converter.path and whether it was updated.

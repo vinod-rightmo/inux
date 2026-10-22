@@ -1,8 +1,7 @@
-CONTEXT
+context as @writing_guidance
     Write as a developer explaining work to a capable teammate unfamiliar with the
     feature. Open with the concrete result or problem, then explain behavior, cause,
     and implementation in plain sentences. Introduce internal terms only when useful.
     Explain assumptions. Preserve accurate developer wording and judgments. Avoid
     repetition, generic claims, invented results, personal experience, slang, and
     fake quotations.
-AS writing_guidance
